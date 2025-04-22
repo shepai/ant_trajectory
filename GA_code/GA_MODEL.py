@@ -11,7 +11,7 @@ class controller:
         self.b=[]
         last_layer=input_size
         self.gene_size=input_size
-        self.geno=np.array() #gather the genotype for flat mutation
+        self.geno=np.array([]) #gather the genotype for flat mutation
         for i in range(len(hiddensizes)):
             self.w.append(np.random.normal(0,std,(last_layer,hiddensizes[i])))
             self.b.append(np.random.normal(0,std,(hiddensizes[i])))
@@ -21,7 +21,7 @@ class controller:
         self.w.append(np.random.normal(0,std,(last_layer,output)))
         self.b.append(np.random.normal(0,std,(output)))
         self.geno = np.concatenate([self.geno,self.w[-1].flatten(),self.b[-1].flatten()])
-        self.gene_size = self.gene_size + last_layer*output + output  #gene size calculation for later
+        self.gene_size = len(self.geno)  #gene size calculation for later
         self.std=std
         #form a neural network ^
     def mutate(self,rate=0.2): #random change of mutating different genes throughout the network
@@ -35,5 +35,7 @@ class controller:
         for i in range(len(self.w)-1):
             x=self.activation(np.dot(x,self.w[i]) + self.b[i])
         return np.dot(x,self.w[-1]) + self.b[-1]
-
-        
+    def sex(self,geno1,geno2,prob_winning=0.6):
+        probabilities=np.random.random(self.gene_size)
+        geno2.geno[np.where(probabilities<prob_winning)]=geno1.geno[np.where(probabilities<prob_winning)]
+        return geno2
