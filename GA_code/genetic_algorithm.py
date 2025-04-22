@@ -53,7 +53,7 @@ class Microbial_GA:
             history.append(np.max(fitness_matrix))
         return history,fitness_matrix
     
-if __name__ == "__main__":
+if __name__ == "__main__": #test code to run in same file 
     def fitness(positions,target):
         return np.random.random((1))
     class environment_example:
