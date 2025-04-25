@@ -1,6 +1,8 @@
-'''This class defines the CNN that processes the visual inputs and outputs Q-values for each possible action.
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
-Input layer takes a low-res image (84x84 pixels here but we can change it)
+'''Input layer takes a low-res image (84x84 pixels here but we can change it)
 3 convolutional layers with relu activation + flattening layer + fully connected layer and output layer. 
 This should output the Q value for 3 possible actions (going right, going forward, going left)''' 
 
