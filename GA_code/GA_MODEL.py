@@ -27,14 +27,17 @@ class controller:
     def mutate(self,rate=0.2): #random change of mutating different genes throughout the network
         probailities=np.random.random(self.gene_size)
         self.geno[np.where(probailities<rate)]+=np.random.normal(0,self.std,self.geno[np.where(probailities<rate)].shape)
+        self.geno[self.geno<-16]=-16
+        self.geno[self.geno<16]=16
     def activation(self,x): #can replace with any activation function
-        return np.tanh(x)
+        return 1/(1 + np.exp(-x))
     def step(self,x):
         #take in parameter x which is the input data, this can be linear data or an image
         x=x.flatten()
+        x=x.reshape((1,x.shape[0]))
         for i in range(len(self.w)-1):
             x=self.activation(np.dot(x,self.w[i]) + self.b[i])
-        return np.dot(x,self.w[-1]) + self.b[-1]
+        return (np.dot(x,self.w[-1]) + self.b[-1])[0]
     def sex(self,geno1,geno2,prob_winning=0.6):
         probabilities=np.random.random(self.gene_size)
         geno2.geno[np.where(probabilities<prob_winning)]=geno1.geno[np.where(probabilities<prob_winning)]
