@@ -1,14 +1,7 @@
 
 import numpy as np
 from copy import deepcopy
-def fitness(positions,target): #fitness that takes in positions over time and the target
-    #return the fitness based on how quickly it got to the target
-    return 0
 
-_INPUT_SIZE_=10
-_H1_=10
-_H2_=10
-_OUTPUTSIZE_=10
 
 class Microbial_GA:
     def __init__(self,num_generations,population_size,mutation_rate,sex=False):
@@ -56,6 +49,10 @@ class Microbial_GA:
         return history,fitness_matrix
     
 if __name__ == "__main__": #test code to run in same file
+    _INPUT_SIZE_=10
+    _H1_=10
+    _H2_=10
+    _OUTPUTSIZE_=10
     from GA_MODEL import controller, controllerCNN 
     def fitness(positions,target):
         return np.random.random((1))
