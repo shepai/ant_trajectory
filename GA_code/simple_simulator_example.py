@@ -13,8 +13,8 @@ class environment:
         self.target=[50,50]
         self.map=(100,100)
         self.agent=(startx,starty)
-        self.acceleration=0.2
-        
+        self.acceleration=0.1
+        self.dt=0.01
        
     def checkCollisions(self): #check the collisions by looking at euclid didstance
         distances=np.sqrt(np.sum(np.square(self.agent[0]-self.collisions)+np.square(self.agent[1]-self.collisions),axis=1))
@@ -44,32 +44,44 @@ class environment:
             image[:,start:end]=np.maximum(image[:,start:end],1)
         return image
     def moveAgent(self,velx,vely): #move the agent in the simulator
-        self.agent=[self.agent[0]+(self.acceleration*velx),self.agent[1]+(self.acceleration*vely)]
+        displacementx = velx*self.dt + 0.5*self.acceleration*(self.dt**2)
+        displacementy = vely*self.dt + 0.5*self.acceleration*(self.dt**2)
+        #print(displacementx,displacementy)
+        self.agent=[self.agent[0]+displacementx,self.agent[1]+displacementy]
         self.trajectory.append(self.agent)
         return self.checkCollisions()
     def runTrial(self,agent,T=1,dt=0.01): #run a trial
         self.reset()
         dist=[]
+        self.dt=dt
         for t in np.arange(0,T,dt): #loop through timesteps
             vel=agent.step(np.concatenate([self.getimage().flatten(),np.array(self.target)]))  #get agent prediction
-            vel=vel/10
-            vel[vel<-5]=-5
-            vel[vel>5]=5
-            problem=self.moveAgent(vel[0],vel[1]) #move to target
+            problem=self.moveAgent(vel[0],vel[0]+1) #move to target
             dist.append(np.linalg.norm(np.array(self.agent)-np.array(self.target))) #distance to target collection
             if problem: break
+        plt.close()
         return np.array(self.trajectory), np.array(dist)
         
 if __name__=="__main__": #demo code to show image visualisation over time
     env=environment()
-    velx=sorted(np.random.normal(0,5,(200,)))
-    vely=sorted(np.random.normal(0,5,(120,)))
-    print(velx)
-    for i in range(100):
+    
+    env.dt=0.1
+    class agent: #demo agent
+        def __init__(self,NUM): #predetermine all the motor positions
+            self.velx=(np.abs(np.random.normal(0,1,(NUM,)))+np.random.normal(0,2,(NUM)))
+            self.vely=(np.abs(np.random.normal(0,1,(NUM,)))+np.random.normal(0,2,(NUM)))
+            self.t=-1
+        def step(self,x):
+            self.t+=1
+            return [self.velx[self.t],self.vely[self.t]]
+            
+    NUM=1000
+    env.runTrial(agent(1000),10)
+    """for i in range(NUM):
         problem=env.moveAgent(velx[i],vely[i])
-        if problem: break
-        plt.cla()
-        plt.imshow(env.getimage())
-        plt.pause(0.05)
+        if problem: break"""
+    """plt.cla()
+        plt.imshow(env.getimage(image_height=10))
+        plt.pause(0.01)"""
     plt.close()
     env.visualise()
