@@ -1,7 +1,7 @@
 import numpy as np
 
 class controller:
-    def __init__(self,input_size,hiddensizes,output,std=5):
+    def __init__(self,input_size,hiddensizes,output,std=2):
         """
         GA class takes in the input size (so flattened image size)
         hiddensizes should be an array containining n layers and each index being the layer size
@@ -12,7 +12,8 @@ class controller:
         last_layer=input_size
         self.gene_size=input_size
         self.geno=np.array([]) #gather the genotype for flat mutation
-        for i in range(len(hiddensizes)):
+        self.hiddensizes=hiddensizes
+        for i in range(len(self.hiddensizes)):
             self.w.append(np.random.normal(0,std,(last_layer,hiddensizes[i])))
             self.b.append(np.random.normal(0,std,(hiddensizes[i])))
             self.gene_size = self.gene_size + last_layer*hiddensizes[i] + hiddensizes[i] #gene size calculation for later
@@ -28,7 +29,15 @@ class controller:
         probailities=np.random.random(self.gene_size)
         self.geno[np.where(probailities<rate)]+=np.random.normal(0,self.std,self.geno[np.where(probailities<rate)].shape)
         self.geno[self.geno<-16]=-16
-        self.geno[self.geno<16]=16
+        self.geno[self.geno>16]=16
+        idx=0
+        for i in range(len(self.w)):
+            size=self.w[i].flatten().shape[0]
+            self.w[i]=self.geno[idx:idx+size].reshape(self.w[i].shape)
+            idx+=size
+            size=self.b[i].flatten().shape[0]
+            self.b[i]=self.geno[idx:idx+size].reshape(self.b[i].shape)
+            idx+=size
     def activation(self,x): #can replace with any activation function
         return 1/(1 + np.exp(-x))
     def step(self,x):
@@ -146,3 +155,11 @@ class controllerCNN:
         probabilities = np.random.random(self.gene_size)
         parent2.geno[np.where(probabilities < prob_winning)] = parent1.geno[np.where(probabilities < prob_winning)]
         return parent2
+
+
+if __name__=="__main__":
+    control=controller(100,[10,10],2)
+    control.step(np.random.random((1,100)))
+    print("Mutating")
+    control.mutate()
+    control.step(np.random.random((1,100)))

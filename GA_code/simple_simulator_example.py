@@ -45,15 +45,13 @@ class environment:
             image[:,start:end]=np.maximum(image[:,start:end],1)
         return image
     def moveAgent(self,velx,vely): #move the agent in the simulator
-        # Compute linear and angular velocities
+        #compute linear and angular velocities
         v = (velx + vely) / 2.0  # linear velocity (m/s)
         omega = (velx - vely) #/ wheel_base  # angular velocity (rad/s)
-
-        # Update position
+        # update position
         x = v * self.dt * np.cos(self.angle)
         y = v * self.dt * np.sin(self.angle)
-
-        # Update orientation
+        #update orientation
         self.angle += omega * self.dt
         #print(displacementx,displacementy)
         self.agent=[self.agent[0]+x,self.agent[1]+y]
