@@ -15,6 +15,7 @@ class environment:
         self.agent=(startx,starty)
         self.acceleration=0.1
         self.dt=0.01
+        self.angle=0
        
     def checkCollisions(self): #check the collisions by looking at euclid didstance
         distances=np.sqrt(np.sum(np.square(self.agent[0]-self.collisions)+np.square(self.agent[1]-self.collisions),axis=1))
@@ -44,10 +45,18 @@ class environment:
             image[:,start:end]=np.maximum(image[:,start:end],1)
         return image
     def moveAgent(self,velx,vely): #move the agent in the simulator
-        displacementx = velx*self.dt + 0.5*self.acceleration*(self.dt**2)
-        displacementy = vely*self.dt + 0.5*self.acceleration*(self.dt**2)
+        # Compute linear and angular velocities
+        v = (velx + vely) / 2.0  # linear velocity (m/s)
+        omega = (velx - vely) #/ wheel_base  # angular velocity (rad/s)
+
+        # Update position
+        x = v * self.dt * np.cos(self.angle)
+        y = v * self.dt * np.sin(self.angle)
+
+        # Update orientation
+        self.angle += omega * self.dt
         #print(displacementx,displacementy)
-        self.agent=[self.agent[0]+displacementx,self.agent[1]+displacementy]
+        self.agent=[self.agent[0]+x,self.agent[1]+y]
         self.trajectory.append(self.agent)
         return self.checkCollisions()
     def runTrial(self,agent,T=1,dt=0.01): #run a trial
@@ -56,7 +65,7 @@ class environment:
         self.dt=dt
         for t in np.arange(0,T,dt): #loop through timesteps
             vel=agent.step(np.concatenate([self.getimage().flatten(),np.array(self.target)]))  #get agent prediction
-            problem=self.moveAgent(vel[0],vel[0]+1) #move to target
+            problem=self.moveAgent(vel[0],vel[1]) #move to target
             dist.append(np.linalg.norm(np.array(self.agent)-np.array(self.target))) #distance to target collection
             if problem: break
         plt.close()
@@ -65,7 +74,7 @@ class environment:
 if __name__=="__main__": #demo code to show image visualisation over time
     env=environment()
     
-    env.dt=0.1
+    env.dt=0.10
     class agent: #demo agent
         def __init__(self,NUM): #predetermine all the motor positions
             self.velx=(np.abs(np.random.normal(0,1,(NUM,)))+np.random.normal(0,2,(NUM)))
