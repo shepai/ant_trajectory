@@ -30,6 +30,8 @@ class environment:
         for i in range(100):
             p.setTimeStep(1. / 240.)  # Typical time step for smooth simulation
             p.stepSimulation()
+    def getObservation(self):
+        return self.getimage()
     def getimage(self):
         # Get robot position and orientation
         pos, orn = p.getBasePositionAndOrientation(self.robot_id)

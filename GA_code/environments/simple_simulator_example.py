@@ -16,7 +16,8 @@ class environment:
         self.acceleration=0.1
         self.dt=0.01
         self.angle=0
-       
+    def getObservation(self):
+        return self.getimage()
     def checkCollisions(self): #check the collisions by looking at euclid didstance
         distances=np.sqrt(np.sum(np.square(self.agent[0]-self.collisions)+np.square(self.agent[1]-self.collisions),axis=1))
         if len(np.where(distances<0.4)[0])>0:
