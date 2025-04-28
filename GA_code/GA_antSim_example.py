@@ -2,9 +2,9 @@
 An example of combining the GA model with a simulator 
 """
 
-from GA_MODEL import controller, controllerCNN
-from genetic_algorithm import *
-from simple_simulator_example import environment
+from GAs.GA_MODEL import controller, controllerCNN
+from GAs.genetic_algorithm import *
+from environments.ant_arena import environment
 
 env=environment() #call in demo environment
 
