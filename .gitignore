@@ -3,3 +3,5 @@ GA_code/__pycache__/genetic_algorithm.cpython-310.pyc
 *.pyc
 GA_code/__pycache__/GA_MODEL.cpython-310.pyc
 /GA_code/__pycache__
+*.pyc
+/GA_code/my_robot-master
