@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('TkAgg')
 import numpy as np
 class environment:
     def __init__(self,startx=0,starty=0):
@@ -64,7 +66,11 @@ class environment:
         self.dt=dt
         for t in np.arange(0,T,dt): #loop through timesteps
             vel=agent.step(np.concatenate([self.getimage().flatten(),np.array(self.target)]))  #get agent prediction
-            problem=self.moveAgent(vel[0],vel[1]) #move to target
+            if "LRF" in str(agent.__class__):
+                options=[[0,0.1],[0.1,0],[0,0]]
+                problem=self.moveAgent(*options[vel]) #move to target
+            else: 
+                problem=self.moveAgent(vel[0],vel[1]) #move to target
             dist.append(np.linalg.norm(np.array(self.agent)-np.array(self.target))) #distance to target collection
             if problem: break
         return np.array(self.trajectory), np.array(dist)

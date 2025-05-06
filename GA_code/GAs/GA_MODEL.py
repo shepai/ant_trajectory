@@ -52,6 +52,16 @@ class controller:
         geno2.geno[np.where(probabilities<prob_winning)]=geno1.geno[np.where(probabilities<prob_winning)]
         return geno2
     
+
+class controller_LRF(controller):
+    def step(self,x):
+        #take in parameter x which is the input data, this can be linear data or an image
+        x=x.flatten()
+        x=x.reshape((1,x.shape[0]))
+        for i in range(len(self.w)-1):
+            x=self.activation(np.dot(x,self.w[i]) + self.b[i])
+        return np.argmax((np.dot(x,self.w[-1]) + self.b[-1])[0])
+    
 import numpy as np
 import scipy.signal  # for convolution without needing torch
 
