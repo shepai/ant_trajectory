@@ -66,7 +66,7 @@ import numpy as np
 import scipy.signal  # for convolution without needing torch
 
 class controllerCNN:
-    def __init__(self, input_shape, hidden_size, output_size, kernel_sizes=[8,4,3], num_kernels=[4,2,1], std=0.1):
+    def __init__(self, input_shape, hidden_size, output_size, kernel_sizes=[[5,3],[3,3],[3,3]], num_kernels=[4,2,1], std=0.1):
         """
         CNN Controller that can be evolved.
         
@@ -89,7 +89,7 @@ class controllerCNN:
 
         in_channels = 1  #assuming grayscale input; you can adapt for RGB later
         for ksize, nkernels in zip(kernel_sizes, num_kernels):
-            kernel_shape = (nkernels, in_channels, ksize, ksize)
+            kernel_shape = (nkernels, in_channels, ksize[0], ksize[1])
             bias_shape = (nkernels,)
             kernels = np.random.normal(0, std, kernel_shape)
             biases = np.random.normal(0, std, bias_shape)
@@ -104,8 +104,8 @@ class controllerCNN:
         # Flatten size needs to be estimated. Assume input shrinks by (kernel_size - 1) each conv layer without padding
         h, w = input_shape
         for k in kernel_sizes:
-            h -= (k - 1)
-            w -= (k - 1)
+            h -= (k[0] - 1)
+            w -= (k[1] - 1)
         flattened_size = h * w * in_channels
         self.w = [np.random.normal(0, std, (flattened_size, hidden_size)), np.random.normal(0, std, (hidden_size, output_size))]
         self.b = [np.random.normal(0, std, (hidden_size,)),np.random.normal(0, std, (output_size,))]
@@ -139,7 +139,7 @@ class controllerCNN:
         in_data = x[np.newaxis, :, :]  #add channel dimension
 
         for layer_idx, (ksize, nkernels) in enumerate(zip(self.kernel_sizes, self.num_kernels)):
-            kernels_shape = (nkernels, in_data.shape[0], ksize, ksize)
+            kernels_shape = (nkernels, in_data.shape[0], ksize[0], ksize[1])
             num_kernel_params = np.prod(kernels_shape)
             kernels = self.geno[pointer:pointer+num_kernel_params].reshape(kernels_shape)
             pointer += num_kernel_params
@@ -152,8 +152,8 @@ class controllerCNN:
             out_data = []
             for i in range(nkernels):
                 summed = np.zeros((
-                    in_data.shape[1] - ksize + 1,
-                    in_data.shape[2] - ksize + 1
+                    in_data.shape[1] - ksize[0] + 1,
+                    in_data.shape[2] - ksize[1] + 1
                 ))
                 for j in range(in_data.shape[0]):  #over input channels
                     summed += scipy.signal.correlate2d(in_data[j], kernels[i, j], mode='valid')
@@ -183,7 +183,7 @@ class controllerCNN_LRF(controllerCNN):
         in_data = x[np.newaxis, :, :]  #add channel dimension
 
         for layer_idx, (ksize, nkernels) in enumerate(zip(self.kernel_sizes, self.num_kernels)):
-            kernels_shape = (nkernels, in_data.shape[0], ksize, ksize)
+            kernels_shape = (nkernels, in_data.shape[0], ksize[0], ksize[1])
             num_kernel_params = np.prod(kernels_shape)
             kernels = self.geno[pointer:pointer+num_kernel_params].reshape(kernels_shape)
             pointer += num_kernel_params
@@ -214,9 +214,9 @@ class controllerCNN_LRF(controllerCNN):
     
 if __name__=="__main__":
     #control=controller(100,[10,10],2)
-    control=controllerCNN((100,100),512,3)
-    control.step(np.random.random((1,100,100,1)))
+    control=controllerCNN((40,8),512,3)
+    control.step(np.random.random((1,40,8,1)))
     print("Mutating")
     control.mutate()
-    out=control.step(np.random.random((1,100,100,1)))
+    out=control.step(np.random.random((1,40,8,1)))
     print(out.shape)
