@@ -7,7 +7,7 @@ import torch.nn.functional as F
 This should output the Q value for 3 possible actions (going right, going forward, going left)''' 
 
 class AntAgentCNN(nn.Module):
-    def __init__(self, input_channels=3, num_actions=3): 
+    def __init__(self, input_channels=1, num_actions=3): 
         super(AntAgentCNN, self).__init__()
         self.conv1 = nn.Conv2d(input_channels, 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
