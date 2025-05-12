@@ -14,10 +14,10 @@ class Microbial_GA:
         self.rate=mutation_rate
         #self.initialize_population(controller,[_INPUT_SIZE_,[_H1_,_H2_],_OUTPUTSIZE_])
         self.sex=sex
-    def initialize_population(self,contr,params):
+    def initialize_population(self,contr,params,std=0.2):
         population=[]
         for i in range(self.pop_zise):
-            population.append(contr(*params))   #@seyi this is where the network sizes go
+            population.append(contr(*params,std=std))   #@seyi this is where the network sizes go
         self.pop=population
     def evolve(self,environment,fitness,outputs=False):
         history=[]
