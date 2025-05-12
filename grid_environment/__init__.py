@@ -28,12 +28,22 @@ class environment:
             self.out.release()
             self.recording=0
         if self.record:
-            self.recording=1
+            frame = self.getObservation()
+            if frame is None:
+                raise RuntimeError("Failed to get initial observation for video recording.")
+            if frame.shape[2] != 3 or frame.dtype != np.uint8:
+                raise ValueError(f"Expected shape (H, W, 3) uint8 but got {frame.shape}, {frame.dtype}")
+            
+            self.recording = 1
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            frame=self.getObservation()
             height, width = frame.shape[:2]
-            self.out = cv2.VideoWriter(self.path+'/data/video_generator/output.mp4', fourcc, 20.0, (width, height))  # 20 FPS, 
-
+            self.out = cv2.VideoWriter(
+                self.path + '/data/video_generator/output.mp4',
+                fourcc, 20.0, (width, height)
+            )
+            if not self.out.isOpened():
+                raise RuntimeError("VideoWriter failed to open. Check codec, path, and frame size.")
+            
     def getObservation(self):
         image=self.find_nearest(*self.agent_pos)
         pixels_per_degree = image.shape[1] / 360.0
@@ -64,12 +74,18 @@ class environment:
         self.agent_pos[0]+=y
         self.agent_pos[1]+=x
         self.trajectory.append(self.agent_pos.copy())
+        image=self.getObservation()
         if self.show:
             plt.cla()
-            plt.imshow(self.getObservation())
+            plt.imshow(image)
             plt.pause(0.01)
-        if self.record:
-            self.out.write(self.getObservation())
+        if self.record and self.recording:
+            if image is not None and image.shape[2] == 3 and image.dtype == np.uint8:
+                print("Writing frame:", image.shape, image.dtype)
+                bgr_frame = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                self.out.write(bgr_frame)
+            else:
+                print("Skipping frame — invalid shape or type:", image)
     def visualise(self):
         plt.close()
         traj=np.array(self.trajectory)
@@ -95,7 +111,7 @@ if __name__=="__main__":
     import keyboard
     import time
     x, y = 0.0, 0.0
-    step = 0.01
+    step = 0.1
     env.reset()
     try:
         while True:
@@ -107,7 +123,7 @@ if __name__=="__main__":
                 env.moveAgent(0, step)
             elif keyboard.is_pressed('left'):
                 env.moveAgent(0, -step)
-            env.moveAgent(0, 0)
+            #env.moveAgent(0, 0)
             time.sleep(0.01)  # small delay to avoid flooding with commands
     except KeyboardInterrupt:
         env.out.release()
