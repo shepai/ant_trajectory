@@ -99,7 +99,8 @@ class environment:
         dist=[]
         self.dt=dt
         for t in np.arange(0,T,dt): #loop through timesteps
-            vel=agent.step(np.concatenate([self.getObservation().flatten(),np.array(self.target)]))  #get agent prediction #ODO update for CNN
+            observation= self.getObservation() if "CNN" in str(agent.__class__) else np.concatenate([self.getObservation().flatten(),np.array(self.target)])
+            vel=agent.step(observation)  #get agent prediction #ODO update for CNN
             if "LRF" in str(agent.__class__):
                 options=[[0,0.01],[0.01,0],[0.01,0.01]]
                 problem=self.moveAgent(*options[vel]) #move to target
