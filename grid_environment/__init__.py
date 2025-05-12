@@ -32,14 +32,14 @@ class environment:
             frame = self.getObservation()
             if frame is None:
                 raise RuntimeError("Failed to get initial observation for video recording.")
-            if frame.shape[2] != 3 or frame.dtype != np.uint8:
-                raise ValueError(f"Expected shape (H, W, 3) uint8 but got {frame.shape}, {frame.dtype}")
+            if frame.dtype != np.uint8:
+                raise ValueError(f"Expected shape (H, W) uint8 but got {frame.shape}, {frame.dtype}")
             
             self.recording = 1
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
             height, width = frame.shape[:2]
             self.out = cv2.VideoWriter(
-                self.path + '/data/video_generator/output.avi',
+                self.path + '/data/video_generator/output2.avi',
                 fourcc, 20.0, (width, height)
             )
             if not self.out.isOpened():
@@ -84,8 +84,8 @@ class environment:
             plt.imshow(image)
             plt.pause(0.01)
         if self.record and self.recording:
-            if image is not None and image.shape[2] == 3 and image.dtype == np.uint8:
-                print("Writing frame:", image.shape, image.dtype)
+            if image is not None and image.dtype == np.uint8:
+                #print("Writing frame:", image.shape, image.dtype)
                 bgr_frame = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
                 self.out.write(bgr_frame)
             else:
@@ -110,6 +110,7 @@ class environment:
                 problem=self.moveAgent(vel[0],vel[1]) #move to target
             dist.append(np.linalg.norm(np.array(self.agent_pos)-np.array(self.target))) #distance to target collection
             if problem: break
+        print("\tRan trial in",(time.time()-t_),"seconds")
         return np.array(self.trajectory), np.array(dist)
         
 if __name__=="__main__":
