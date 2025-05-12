@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import matplotlib
+import time
 matplotlib.use('TkAgg')
 class environment:
     def __init__(self,data="/data/full_arena_grid_infer_views/",show=0,record=0):
@@ -13,7 +14,6 @@ class environment:
         self.datapath=self.path+data
         self.dt=0.1
         self.grid=pd.read_csv(self.datapath+"/full_grid_views_meta_data.csv")
-        print(self.grid.head())
         self.x=self.grid["x_m"]
         self.y=self.grid["y_m"]
         self.show=show
@@ -96,6 +96,7 @@ class environment:
         plt.plot(traj[:,0],traj[:,1])
         plt.show()
     def runTrial(self,agent,T=1,dt=0.01): #run a trial
+        t=time.time()
         self.reset()
         dist=[]
         self.dt=dt
@@ -109,6 +110,7 @@ class environment:
                 problem=self.moveAgent(vel[0],vel[1]) #move to target
             dist.append(np.linalg.norm(np.array(self.agent_pos)-np.array(self.target))) #distance to target collection
             if problem: break
+        print("Time",time.time()-time/60,"minutes")
         return np.array(self.trajectory), np.array(dist)
         
 if __name__=="__main__":
