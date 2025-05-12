@@ -96,7 +96,7 @@ class environment:
         plt.plot(traj[:,0],traj[:,1])
         plt.show()
     def runTrial(self,agent,T=1,dt=0.01): #run a trial
-        t=time.time()
+        t_=time.time()
         self.reset()
         dist=[]
         self.dt=dt
@@ -110,7 +110,6 @@ class environment:
                 problem=self.moveAgent(vel[0],vel[1]) #move to target
             dist.append(np.linalg.norm(np.array(self.agent_pos)-np.array(self.target))) #distance to target collection
             if problem: break
-        print("Time",(time.time()-t)/60,"minutes")
         return np.array(self.trajectory), np.array(dist)
         
 if __name__=="__main__":
