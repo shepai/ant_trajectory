@@ -67,7 +67,7 @@ class environment:
         for t in np.arange(0,T,dt): #loop through timesteps
             vel=agent.step(np.concatenate([self.getimage().flatten(),np.array(self.target)]))  #get agent prediction
             if "LRF" in str(agent.__class__):
-                options=[[0,0.1],[0.1,0],[0,0]]
+                options=[[0,1],[1,0],[1,1]]
                 problem=self.moveAgent(*options[vel]) #move to target
             else: 
                 problem=self.moveAgent(vel[0],vel[1]) #move to target
