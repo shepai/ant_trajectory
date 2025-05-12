@@ -51,6 +51,7 @@ class environment:
         offset = int(pixels_per_degree * np.degrees(self.angle))
         # Shift image horizontally (wrap around using numpy.roll)
         rotated = np.roll(image, -offset, axis=1)  # negative for clockwise
+        rotated=cv2.cvtColor(rotated, cv2.COLOR_BGR2GRAY)
         return rotated
     def find_nearest(self,x,y):
         closest_x = min(range(len(self.x)), key=lambda i: abs(self.x[i] - x))
@@ -99,7 +100,7 @@ class environment:
         dist=[]
         self.dt=dt
         for t in np.arange(0,T,dt): #loop through timesteps
-            observation= self.getObservation() if "CNN" in str(agent.__class__) else np.concatenate([self.getObservation().flatten(),np.array(self.target)])
+            observation= self.getObservation().reshape((1,*self.getObservation().shape,1)) if "CNN" in str(agent.__class__) else np.concatenate([self.getObservation().flatten(),np.array(self.target)])
             vel=agent.step(observation)  #get agent prediction #ODO update for CNN
             if "LRF" in str(agent.__class__):
                 options=[[0,0.01],[0.01,0],[0.01,0.01]]
