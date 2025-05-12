@@ -175,8 +175,7 @@ class controllerCNN:
         return geno2
 
 class controllerCNN_LRF(controllerCNN):
-    def step(self,x):
-        #take in parameter x which is the input data, this can be linear data or an image
+    def step(self, x):
         x = x.copy()
         pointer = 0
         x = x.squeeze() 
@@ -196,8 +195,8 @@ class controllerCNN_LRF(controllerCNN):
             out_data = []
             for i in range(nkernels):
                 summed = np.zeros((
-                    in_data.shape[1] - ksize + 1,
-                    in_data.shape[2] - ksize + 1
+                    in_data.shape[1] - ksize[0] + 1,
+                    in_data.shape[2] - ksize[1] + 1
                 ))
                 for j in range(in_data.shape[0]):  #over input channels
                     summed += scipy.signal.correlate2d(in_data[j], kernels[i, j], mode='valid')
@@ -214,9 +213,9 @@ class controllerCNN_LRF(controllerCNN):
     
 if __name__=="__main__":
     #control=controller(100,[10,10],2)
-    control=controllerCNN((40,8),512,3)
+    control=controllerCNN_LRF((40,8),512,3)
     control.step(np.random.random((1,40,8,1)))
     print("Mutating")
     control.mutate()
     out=control.step(np.random.random((1,40,8,1)))
-    print(out.shape)
+    print(out)
