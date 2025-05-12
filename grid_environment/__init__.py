@@ -20,9 +20,10 @@ class environment:
         self.record=record
         self.recording=0
         self.reset()
+        self.target=(0.15,-0.003) #food source
     def reset(self):
         self.agent_pos=[-0.170,-0.443]
-        self.angle=360
+        self.angle=0
         self.trajectory=[]
         if self.recording:
             self.out.release()
@@ -35,10 +36,10 @@ class environment:
                 raise ValueError(f"Expected shape (H, W, 3) uint8 but got {frame.shape}, {frame.dtype}")
             
             self.recording = 1
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            fourcc = cv2.VideoWriter_fourcc(*'XVID')
             height, width = frame.shape[:2]
             self.out = cv2.VideoWriter(
-                self.path + '/data/video_generator/output.mp4',
+                self.path + '/data/video_generator/output.avi',
                 fourcc, 20.0, (width, height)
             )
             if not self.out.isOpened():
@@ -47,7 +48,7 @@ class environment:
     def getObservation(self):
         image=self.find_nearest(*self.agent_pos)
         pixels_per_degree = image.shape[1] / 360.0
-        offset = int(pixels_per_degree * self.angle)
+        offset = int(pixels_per_degree * np.degrees(self.angle))
         # Shift image horizontally (wrap around using numpy.roll)
         rotated = np.roll(image, -offset, axis=1)  # negative for clockwise
         return rotated
@@ -71,6 +72,8 @@ class environment:
         y = v * self.dt * np.sin(self.angle)
         #update orientation
         self.angle += omega * self.dt
+        if self.angle>360: #wrap round
+            self.angle=self.angle-360
         self.agent_pos[0]+=y
         self.agent_pos[1]+=x
         self.trajectory.append(self.agent_pos.copy())
@@ -96,13 +99,13 @@ class environment:
         dist=[]
         self.dt=dt
         for t in np.arange(0,T,dt): #loop through timesteps
-            vel=agent.step(np.concatenate([self.getimage().flatten(),np.array(self.target)]))  #get agent prediction
+            vel=agent.step(np.concatenate([self.getObservation().flatten(),np.array(self.target)]))  #get agent prediction #ODO update for CNN
             if "LRF" in str(agent.__class__):
                 options=[[0,0.01],[0.01,0],[0.01,0.01]]
                 problem=self.moveAgent(*options[vel]) #move to target
             else: 
                 problem=self.moveAgent(vel[0],vel[1]) #move to target
-            dist.append(np.linalg.norm(np.array(self.agent)-np.array(self.target))) #distance to target collection
+            dist.append(np.linalg.norm(np.array(self.agent_pos)-np.array(self.target))) #distance to target collection
             if problem: break
         return np.array(self.trajectory), np.array(dist)
         
