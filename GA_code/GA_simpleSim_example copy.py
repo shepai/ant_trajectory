@@ -34,7 +34,7 @@ env.runTrial(best_genotype)
 env.visualise()
 """
 #microbial GA
-ga=Microbial_GA(100000,100,0.2,sex=1) #
+ga=Microbial_GA(10000,100,0.2,sex=1) #
 ga.initialize_population(controller_LRF,[_INPUT_SIZE_,[_H1_,_H2_],_OUTPUTSIZE_])
 history,fitness=ga.evolve(env,fitness,outputs=True) #run the GA
 print(fitness.shape)
