@@ -110,7 +110,7 @@ class environment:
                 problem=self.moveAgent(vel[0],vel[1]) #move to target
             dist.append(np.linalg.norm(np.array(self.agent_pos)-np.array(self.target))) #distance to target collection
             if problem: break
-        print("Time",time.time()-time/60,"minutes")
+        print("Time",(time.time()-t)/60,"minutes")
         return np.array(self.trajectory), np.array(dist)
         
 if __name__=="__main__":
