@@ -29,10 +29,10 @@ class environment:
             self.recording=0
         if self.record:
             self.recording=1
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             frame=self.getObservation()
-            print(frame.shape)
-            self.out = cv2.VideoWriter(self.path+'/data/video_generator/output.avi', fourcc, 20.0, frame.shape)  # 20 FPS, 640x480 resolution
+            height, width = frame.shape[:2]
+            self.out = cv2.VideoWriter(self.path+'/data/video_generator/output.mp4', fourcc, 20.0, (width, height))  # 20 FPS, 
 
     def getObservation(self):
         image=self.find_nearest(*self.agent_pos)
@@ -51,6 +51,7 @@ class environment:
         if not nearest_row.empty:
             return cv2.imread(self.datapath+'/'+nearest_row['img_name'].values[0])
         else:
+            print("Error: Cooked *skull face emoji*")
             return None
     def moveAgent(self,x,y):
         v = (x + y) / 2.0  # linear velocity (m/s)
@@ -90,25 +91,27 @@ class environment:
         return np.array(self.trajectory), np.array(dist)
         
 if __name__=="__main__":
-    env=environment(show=1,record=0)
+    env=environment(show=1,record=1)
     import keyboard
     import time
     x, y = 0.0, 0.0
     step = 0.01
+    env.reset()
     try:
         while True:
             if keyboard.is_pressed('up'):
-                y += step
+                env.moveAgent(step, 0)
             elif keyboard.is_pressed('down'):
-                y -= step
-            elif keyboard.is_pressed('right'):
-                x += step
+                env.moveAgent(-step, 0)
+            if keyboard.is_pressed('right'):
+                env.moveAgent(0, step)
             elif keyboard.is_pressed('left'):
-                x -= step
-
-            env.moveAgent(x, y)
+                env.moveAgent(0, -step)
+            env.moveAgent(0, 0)
             time.sleep(0.01)  # small delay to avoid flooding with commands
     except KeyboardInterrupt:
+        env.out.release()
         plt.close()
         env.visualise()
+        
     
