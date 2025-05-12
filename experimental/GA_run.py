@@ -8,9 +8,7 @@ from grid_environment import environment
 env=environment() #call in demo environment
 
 #setup the network parameters so that the input is all the pixels values and output 2 velocities for motors
-_INPUT_SIZE_=env.getObservation().flatten().shape[0]+2 #the 2 is for the target location, but realistically it will not know where the target is
-_H1_=16
-_H2_=6
+_INPUT_SIZE_=env.getObservation().shape[:2] #the 2 is for the target location, but realistically it will not know where the target is
 _OUTPUTSIZE_=3
 
 def fitness(trajectory,targets):
@@ -23,7 +21,7 @@ def fitness(trajectory,targets):
 
 #microbial GA
 ga=Microbial_GA(100,10,0.2,sex=1) #
-ga.initialize_population(controller_LRF,[_INPUT_SIZE_,[_H1_,_H2_],_OUTPUTSIZE_])
+ga.initialize_population(controllerCNN_LRF,[_INPUT_SIZE_,512,_OUTPUTSIZE_])
 print("Begin trial")
 history,fitness=ga.evolve(env,fitness,outputs=True) #run the GA
 print(fitness.shape)
