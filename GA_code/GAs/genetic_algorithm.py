@@ -33,7 +33,7 @@ class Microbial_GA:
             ind2=ind1
             while ind2==ind1: #make sure second geno is not first
                 ind2=np.random.randint(0,self.pop_zise-1)
-            if fitness_matrix[ind2]>fitness_matrix[ind1]: #selection
+            if fitness_matrix[ind2]>=fitness_matrix[ind1]: #selection
                 self.pop[ind1]=deepcopy(self.pop[ind2])
                 if self.sex: self.pop[ind1].sex(self.pop[ind1],self.pop[ind2])
                 self.pop[ind1].mutate() #mutate
@@ -45,6 +45,7 @@ class Microbial_GA:
                 if self.sex: self.pop[ind2].sex(self.pop[ind2],self.pop[ind1])
                 positions,target=environment.runTrial(self.pop[ind2])
                 fitness_matrix[ind2]=fitness(positions,target)
+            
             history.append(np.max(fitness_matrix))
         return history,fitness_matrix
     
