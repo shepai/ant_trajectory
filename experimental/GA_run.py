@@ -20,7 +20,7 @@ def fitness(trajectory,targets):
     return fitness
 
 #microbial GA
-ga=Microbial_GA(100,3,0.1,sex=1) #
+ga=Microbial_GA(1000,10,0.1,sex=1) #
 ga.initialize_population(controllerCNN_LRF,[_INPUT_SIZE_,512,_OUTPUTSIZE_],std=0.3)
 print("Begin trial")
 history,fitness=ga.evolve(env,fitness,outputs=True) #run the GA
