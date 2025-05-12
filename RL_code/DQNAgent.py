@@ -35,7 +35,7 @@ class DQNAgent:
 
   # this is where the epsilon-greedy policy is implemented, with probability epsilon, a random action is selected
   #(this is for the whole exploration-exploitation thing happens, by adding some randomness the model can do better) 
-    def select_action(self, state):
+    def step(self, state):
         if random.random() < self.epsilon:
             return random.randrange(self.num_actions)
         with torch.no_grad():
