@@ -2,7 +2,8 @@ import random
 import numpy as np
 from collections import deque
 import torch.optim as optim
-
+from DQNAgent import AntAgentCNN
+import torch
 ''' 
 Okay so, this class is for the deep q network agent and its behaviours (action selection, experience storage, and learning)
 
