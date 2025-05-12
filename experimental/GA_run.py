@@ -5,7 +5,7 @@ from GA_code.GAs.genetic_algorithm import *
 from grid_environment import environment
 
 
-env=environment() #call in demo environment
+env=environment(record=1) #call in demo environment
 
 #setup the network parameters so that the input is all the pixels values and output 2 velocities for motors
 _INPUT_SIZE_=env.getObservation().shape[:2] #the 2 is for the target location, but realistically it will not know where the target is
