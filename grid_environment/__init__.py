@@ -22,7 +22,7 @@ class environment:
         self.reset()
         self.target=(0.15,-0.003) #food source
     def reset(self):
-        self.agent_pos=[-0.170,-0.443]
+        self.agent_pos=[0.08,0.6]
         self.angle=0
         self.trajectory=[]
         if self.recording:
@@ -75,8 +75,8 @@ class environment:
         self.angle += omega * self.dt
         if self.angle>360: #wrap round
             self.angle=self.angle-360
-        self.agent_pos[0]+=y
-        self.agent_pos[1]+=x
+        self.agent_pos[0]+=x
+        self.agent_pos[1]+=y
         self.trajectory.append(self.agent_pos.copy())
         image=self.getObservation()
         if self.show:
@@ -95,16 +95,17 @@ class environment:
         traj=np.array(self.trajectory)
         plt.plot(traj[:,0],traj[:,1])
         plt.show()
-    def runTrial(self,agent,T=1,dt=0.01): #run a trial
+    def runTrial(self,agent,T=1,dt=0.05): #run a trial
         t_=time.time()
         self.reset()
         dist=[]
         self.dt=dt
         for t in np.arange(0,T,dt): #loop through timesteps
-            observation= self.getObservation().reshape((1,*self.getObservation().shape,1)) if "CNN" in str(agent.__class__) else np.concatenate([self.getObservation().flatten(),np.array(self.target)])
+            observation = cv2.resize(self.getObservation(), (8, 48), interpolation = cv2.INTER_AREA)
+            observation=observation.reshape((1,*observation.shape,1)) if "CNN" in str(agent.__class__) else np.concatenate([observation.flatten(),np.array(self.target)])
             vel=agent.step(observation)  #get agent prediction #ODO update for CNN
             if "LRF" in str(agent.__class__):
-                options=[[0,0.01],[0.01,0],[0.01,0.01]]
+                options=[[0,0.1],[0.1,0],[0.1,0.1]]
                 problem=self.moveAgent(*options[vel]) #move to target
             else: 
                 problem=self.moveAgent(vel[0],vel[1]) #move to target

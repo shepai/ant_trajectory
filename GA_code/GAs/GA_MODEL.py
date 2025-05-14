@@ -91,8 +91,8 @@ class controllerCNN:
         for ksize, nkernels in zip(kernel_sizes, num_kernels):
             kernel_shape = (nkernels, in_channels, ksize[0], ksize[1])
             bias_shape = (nkernels,)
-            kernels = np.random.normal(0, std, kernel_shape)
-            biases = np.random.normal(0, std, bias_shape)
+            kernels = np.random.normal(0, std, kernel_shape).astype(np.float32)
+            biases = np.random.normal(0, std, bias_shape).astype(np.float32)
 
             self.kernels.append(kernels)
             self.biases.append(biases)
@@ -107,15 +107,13 @@ class controllerCNN:
             h -= (k[0] - 1)
             w -= (k[1] - 1)
         flattened_size = h * w * in_channels
-        self.w = [np.random.normal(0, std, (flattened_size, hidden_size)), np.random.normal(0, std, (hidden_size, output_size))]
-        self.b = [np.random.normal(0, std, (hidden_size,)),np.random.normal(0, std, (output_size,))]
+        self.w = [np.random.normal(0, std, (flattened_size, hidden_size)).astype(np.float32), np.random.normal(0, std, (hidden_size, output_size)).astype(np.float32)]
+        self.b = [np.random.normal(0, std, (hidden_size,)).astype(np.float32),np.random.normal(0, std, (output_size,)).astype(np.float32)]
         self.geno = np.concatenate([self.geno, self.w[0].flatten(), self.b[0].flatten(), self.w[1].flatten(),self.b[1].flatten()])
-
         self.gene_size = len(self.geno)
-
     def mutate(self,rate=0.2): #random change of mutating different genes throughout the network
         probailities=np.random.random(self.gene_size)
-        self.geno[np.where(probailities<rate)]+=np.random.normal(0,self.std,self.geno[np.where(probailities<rate)].shape)
+        self.geno[np.where(probailities<rate)]+=np.random.normal(0,self.std,self.geno[np.where(probailities<rate)].shape).astype(np.float32)
         self.geno[self.geno<-5]=-5
         self.geno[self.geno>5]=5
 
