@@ -90,6 +90,9 @@ class environment:
                 self.out.write(bgr_frame)
             else:
                 print("Skipping frame — invalid shape or type:", image)
+        if np.average(image)<25: #too dark
+            return True
+        return False
     def visualise(self):
         plt.close()
         traj=np.array(self.trajectory)
@@ -98,14 +101,15 @@ class environment:
     def runTrial(self,agent,T=1,dt=0.05): #run a trial
         t_=time.time()
         self.reset()
+        self.trajectory.append(self.agent_pos.copy())
         dist=[]
         self.dt=dt
         for t in np.arange(0,T,dt): #loop through timesteps
             observation = cv2.resize(self.getObservation(), (8, 48), interpolation = cv2.INTER_AREA)
             observation=observation.reshape((1,*observation.shape,1)) if "CNN" in str(agent.__class__) else np.concatenate([observation.flatten(),np.array(self.target)])
-            vel=agent.step(observation)  #get agent prediction #ODO update for CNN
+            vel=agent.step(observation/255)  #get agent prediction #ODO update for CNN
             if "LRF" in str(agent.__class__):
-                options=[[0,0.1],[0.1,0],[0.1,0.1]]
+                options=[[0,2],[2,0],[1,1]]
                 problem=self.moveAgent(*options[vel]) #move to target
             else: 
                 problem=self.moveAgent(vel[0],vel[1]) #move to target

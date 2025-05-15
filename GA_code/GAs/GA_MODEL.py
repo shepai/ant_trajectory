@@ -116,7 +116,16 @@ class controllerCNN:
         self.geno[np.where(probailities<rate)]+=np.random.normal(0,self.std,self.geno[np.where(probailities<rate)].shape).astype(np.float32)
         self.geno[self.geno<-5]=-5
         self.geno[self.geno>5]=5
-
+        idx=0
+        in_channels = 1 
+        for ksize, nkernels in zip(self.kernel_sizes, self.num_kernels):
+            kernel_shape = (nkernels, in_channels, ksize[0], ksize[1])
+            bias_shape = (nkernels,)
+            geno_k=self.geno[idx:idx+(nkernels* in_channels* ksize[0]* ksize[1])]
+            kernels = geno_k.reshape(kernel_shape).astype(np.float32)
+            idx=idx+(nkernels* in_channels* ksize[0]* ksize[1])
+            geno_k=self.geno[idx:idx+nkernels]
+            biases = geno_k.reshape(bias_shape).astype(np.float32)
 
         idx=self.kernel_vals
         for i in range(len(self.w)):
@@ -126,6 +135,7 @@ class controllerCNN:
             size=self.b[i].flatten().shape[0]
             self.b[i]=self.geno[idx:idx+size].reshape(self.b[i].shape)
             idx+=size
+        print("mutated")
 
     def activation(self, x):
         return np.tanh(x)
