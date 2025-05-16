@@ -119,7 +119,7 @@ class environment:
         return np.array(self.trajectory), np.array(dist)
     def getAntVision(self):
         observation = cv2.resize(self.getObservation(), (8, 48), interpolation = cv2.INTER_AREA)
-        return observation
+        return observation.reshape((1,*observation.shape))
     def step(self,action):
         #action should be the left right turn
         options=[[0,1.5],[1.5,0],[1,1]]

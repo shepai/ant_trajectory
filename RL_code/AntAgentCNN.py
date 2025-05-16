@@ -12,7 +12,7 @@ class AntAgentCNN(nn.Module):
         self.conv1 = nn.Conv2d(1, 16, kernel_size=(5, 3), stride=(2, 1), padding=(2, 1))
         self.conv2 = nn.Conv2d(16, 32, kernel_size=(3, 3), stride=(2, 1), padding=(1, 1))
         self.conv3 = nn.Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 1), padding=(1, 1))
-        self.fc1 = nn.Linear(64 * 7 * 7, 512)  # <-- We adjust based on input image size
+        self.fc1 = nn.Linear(3072, 512)  # <-- We adjust based on input image size
         self.out = nn.Linear(512, num_actions)
 
     def forward(self, x):

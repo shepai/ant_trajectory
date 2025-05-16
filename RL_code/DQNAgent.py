@@ -57,7 +57,8 @@ class DQNAgent:
         #data prep, the sampled experiences are unpacked in the different variables
         states = torch.tensor(np.array(states), dtype=torch.float32).to(self.device)
         actions = torch.tensor(actions).unsqueeze(1).to(self.device)
-        rewards = torch.tensor(rewards).unsqueeze(1).to(self.device)
+        #actions=F.one_hot(actions, num_classes=3).float()
+        rewards = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1).to(self.device)
         next_states = torch.tensor(np.array(next_states), dtype=torch.float32).to(self.device)
         dones = torch.tensor(dones, dtype=torch.float32).unsqueeze(1).to(self.device)
 
