@@ -90,7 +90,13 @@ class environment:
                 self.out.write(bgr_frame)
             else:
                 print("Skipping frame — invalid shape or type:", image)
-        if np.average(image)<25: #too dark
+        if np.average(image)<25 or self.died(): #too dark
+            return True
+        return False
+    def died(self):
+        x,y=self.agent_pos
+        if x<np.min(self.x) or y<np.min(self.y) or x>np.max(self.x) or y>np.max(self.y):
+            print(x,y,np.min(self.x),np.min(self.y),np.max(self.x),np.max(self.y))
             return True
         return False
     def visualise(self):
@@ -122,11 +128,12 @@ class environment:
         return observation.reshape((1,*observation.shape))
     def step(self,action):
         #action should be the left right turn
-        options=[[0,1.5],[1.5,0],[1,1]]
+        options=[[0,0.5],[0.5,0],[0.1,0.1]]
         vel=options[action]
         done=self.moveAgent(*vel) #move agent
         observation = self.getAntVision()
         traj=np.array(self.trajectory)
+        #@alej this is how I have put in reward but feel free to change it
         reward=np.linalg.norm(traj[0]-traj[-1])
         info={}
         return observation,reward,done,info
