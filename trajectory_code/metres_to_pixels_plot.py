@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import numpy as np
-import trajectory_process_functions as tpf
+import trajectory_code.trajectory_process_functions as tpf
 import cv2
 
 
@@ -58,7 +58,8 @@ figure, axes = plt.subplots()
 plt.scatter( xx_grid_pixels, yy_grid_pixels, s=0.1)
 
 figure.set_dpi(200)
-arena_img = plt.imread(r"\trajectory_code\top-down_arena.png")
+#arena_img = plt.imread(r"\trajectory_code\top-down_arena.png")
+arena_img = plt.imread(r"D:\Users\seyij\Projects\ant_trajectory\trajectory_code\top-down_arena.png")
 plt.imshow(arena_img)
 
 #make circles and add to plot
@@ -69,3 +70,81 @@ food_circle = plt.Circle((img_food_coord[0], img_food_coord[1]),
 axes.add_artist(catch_circle)
 axes.add_artist(food_circle)
 plt.show()
+
+#%% plot a single trajectory
+
+traject_coords1 = np.load(r"D:\Users\seyij\Projects\trial2025-05-15 15_30_42.274644.npy")[3] # extract one trajectory
+
+start_position = (0.08, 0.6) # start position in metres in the grid/ simulator
+
+#extract x and y values
+x_vals = traject_coords1[:, 0]
+y_vals = traject_coords1[:, 1]
+
+# get the difference between start x value and each trajectory value. 
+x_diff = x_vals - start_position[0]
+scale = 0.4
+#Then apply a scaling factor to this difference before adding back to the starting x value.
+x_vals = start_position[0] + (x_diff*scale)
+#making y value increase instead of decrease in respect to origin point
+#then takeaway one metre
+y_vals = (start_position[1] + (start_position[1] - y_vals))-1
+
+
+x_vals_pixels = ((x_vals-omni_food_coord[0])*ppm)+img_food_coord[0]
+y_vals_pixels = ((y_vals-omni_food_coord[1])*ppm)+img_food_coord[1]
+
+
+plt.imshow(arena_img)
+plt.scatter(img_food_coord[0], img_food_coord[1], marker= "x")
+
+plt.plot(x_vals_pixels, y_vals_pixels)
+plt.show()
+
+#%% loop to plot all
+
+traject_coords = np.load(r"D:\Users\seyij\Projects\trial2025-05-15 15_30_42.274644.npy")
+ # extract one trajectory
+
+start_position = (0.08, 0.6)
+
+plt.imshow(arena_img)
+plt.scatter(img_food_coord[0], img_food_coord[1], marker= "x")
+for traject in traject_coords:
+#extract x and y values
+    x_vals = traject[:, 0]
+    y_vals = traject[:, 1]
+
+    # get the difference between start x value and each trajectory value. 
+    x_diff = x_vals - start_position[0]
+    scale = 0.4
+    #Then apply a scaling factor to this difference before adding back to the starting x value.
+    x_vals = start_position[0] + (x_diff*scale)
+    #making y value increase instead of decrease in respect to origin point
+    y_vals = (start_position[1] + (start_position[1] - y_vals))-1
+
+    x_vals_pixels = ((x_vals-omni_food_coord[0])*ppm)+img_food_coord[0]
+    y_vals_pixels = ((y_vals-omni_food_coord[1])*ppm)+img_food_coord[1]
+    
+    plt.plot(x_vals_pixels, y_vals_pixels)
+    
+plt.show()
+
+# function version of it in tpf
+
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
