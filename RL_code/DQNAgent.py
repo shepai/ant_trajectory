@@ -1,8 +1,9 @@
+
 import random
 import numpy as np
 from collections import deque
 import torch.optim as optim
-from DQNAgent import AntAgentCNN
+from RL_code.AntAgentCNN import AntAgentCNN
 import torch
 import torch.nn.functional as F
 ''' 

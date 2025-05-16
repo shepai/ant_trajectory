@@ -69,8 +69,8 @@ class environment:
         v = (x + y) / 2.0  # linear velocity (m/s)
         omega = (x - y) #/ wheel_base  # angular velocity (rad/s)
         # update position
-        x = v * self.dt * np.cos(self.angle)
-        y = v * self.dt * np.sin(self.angle)
+        x = max(x,v) * self.dt * np.cos(self.angle)
+        y = max(y,v) * self.dt * np.sin(self.angle)
         #update orientation
         self.angle += omega * self.dt
         if self.angle>360: #wrap round
@@ -105,19 +105,31 @@ class environment:
         dist=[]
         self.dt=dt
         for t in np.arange(0,T,dt): #loop through timesteps
-            observation = cv2.resize(self.getObservation(), (8, 48), interpolation = cv2.INTER_AREA)
+            observation = self.getAntVision()
             observation=observation.reshape((1,*observation.shape,1)) if "CNN" in str(agent.__class__) else np.concatenate([observation.flatten(),np.array(self.target)])
             vel=agent.step(observation/255)  #get agent prediction #ODO update for CNN
             if "LRF" in str(agent.__class__):
-                options=[[0,2],[2,0],[1,1]]
+                options=[[0,1.5],[1.5,0],[1,1]]
                 problem=self.moveAgent(*options[vel]) #move to target
             else: 
                 problem=self.moveAgent(vel[0],vel[1]) #move to target
             dist.append(np.linalg.norm(np.array(self.agent_pos)-np.array(self.target))) #distance to target collection
             if problem: break
-        print("\tRan trial in",(time.time()-t_),"seconds")
+        #print("\tRan trial in",(time.time()-t_),"seconds")
         return np.array(self.trajectory), np.array(dist)
-        
+    def getAntVision(self):
+        observation = cv2.resize(self.getObservation(), (8, 48), interpolation = cv2.INTER_AREA)
+        return observation
+    def step(self,action):
+        #action should be the left right turn
+        options=[[0,1.5],[1.5,0],[1,1]]
+        vel=options[action]
+        done=self.moveAgent(*vel) #move agent
+        observation = self.getAntVision()
+        traj=np.array(self.trajectory)
+        reward=np.linalg.norm(traj[0]-traj[-1])
+        info={}
+        return observation,reward,done,info
 if __name__=="__main__":
     env=environment(show=1,record=1)
     import keyboard
