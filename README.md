@@ -1,6 +1,10 @@
 
 # ant_trajectory
 
+## Environment
+We put together an envionrment that uses a lookup table from a real envrionment the ants are in. The explanation on how these images are gathered is explained further in the Ant trajectory data section. The environment in ```/grid_environment``` uses little memory as there is no 3D rendering going on. It makes a good candidate for simplistic gyms. Our GA and RL example programs in ```/experimental```. Some code needs to be altered so the correct paths are being used.
+
+
 ## Genetic algorithm
 THe code for the genetic algorithm found in /GA_code has the controller (GA_MODEL) and the optimizer (genetic_algorithm). The optimiser code improts the controller neural network, and evolves it using the microbial algorithm. 
 
@@ -20,6 +24,9 @@ class env(Env):
             positions.append(self.currentPosition)
         return positions,target
 ```
+
+## RF learning
+
 
 # Ant trajectory data
 Referring to data in drop box https://sussex.app.box.com/folder/318276494249. And in the github repo "success_plots"
@@ -70,10 +77,3 @@ og_time - the time in the original data set (take into account rows that have be
 og_frame_number - the frame number in the original videos where the data was taken from
 
 
-
-
-
-
-
-
-# test push
