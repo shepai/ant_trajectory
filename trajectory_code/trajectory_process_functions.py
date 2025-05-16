@@ -377,7 +377,7 @@ def get_success_plot(path_to_video, path_to_traject, out_plot_name, out_csv_name
     print("plot saved as " + out_plot_name)
     
 def transform_model_trajects(traject_coords_path, 
-                             image_path="\ant_trajectory\trajectory_code\testA_ant1_image.jpg", x_scale=1):
+                             image_path=r"\ant_trajectory\trajectory_code\testA_ant1_image.jpg", savefig="", x_scale=1):
     
     """Function to plot a series of trajectories from the simulation environment in metres,
     and plot them on top of an image of the real life environment in pixels.
@@ -388,8 +388,9 @@ def transform_model_trajects(traject_coords_path,
     traject_coords_path: Expects path to numpy file where each element is a set of coordinates making a trajctory.
 
     """
-    traject_coords = np.load(traject_coords_path)
-
+    if type(traject_coords_path)==type(""):
+        traject_coords = np.load(traject_coords_path)
+    else: traject_coords=traject_coords_path
     omni_food_coord = (0.15,-0.003,0.43)
     img_food_coord  = (542, 652)
     panel_ends = [(147, 569), (301, 1012)]
@@ -402,6 +403,7 @@ def transform_model_trajects(traject_coords_path,
     
     plt.imshow(arena_img)
     plt.scatter(img_food_coord[0], img_food_coord[1], marker= "x")
+    converted=[]
     for traject in traject_coords:
     #extract x and y values
         x_vals = traject[:, 0]
@@ -418,5 +420,7 @@ def transform_model_trajects(traject_coords_path,
         y_vals_pixels = ((y_vals-omni_food_coord[1])*ppm)+img_food_coord[1]
         
         plt.plot(x_vals_pixels, y_vals_pixels)
-        
+    
+    plt.tight_layout()
+    plt.savefig(savefig)
     plt.show()
