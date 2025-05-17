@@ -8,7 +8,7 @@ import trajectory_code.trajectory_process_functions as tpf
 import cv2
 
 
-#%
+#%%
 
 #calculate and plot a set of omniverse coordinates on top of an arena image
 
@@ -20,36 +20,40 @@ img_food_coord  = (542, 652)
 panel_ends = [(147, 569), (301, 1012)]
 
 #make "pixels per centimeter" ratio
-ppm = tpf.distance(panel_ends[0], panel_ends[1])/0.4 # 0.4 metres is length of a panel in real life
+ppm = tpf.distance(panel_ends[0], panel_ends[1])/0.4 
 
-#how many metres away in the y positive direction (towrds end of arena) to grid
-y_pos = 0.31
-#how many metres away in the y negative direction (towrds start of arena) to grid
-y_neg = -0.44
+#how many metres away in the omniverse y positive direction (towrds start of arena) to grid
+y_pos = 0.65
+#how many metres away in the y omniverse negative direction (towrds end of arena) to grid
+y_neg = -0.45
 #how many metres away in the x positive direction (towrds longest arena edge) to grid
-x_pos = 0.23
+x_pos = 0.32
 #how many metres away in the x negative direction (towards the very large cylinder cue outside areana)  to grid
-x_neg = -0.32
+x_neg = -0.50
 
 #want each grid point to be 2.5 cm (0.025 metres) apart
 x_spacing = int((x_pos-x_neg)/0.025)+1
 y_spacing = int((y_pos-y_neg)/0.025)+1
 
 #make the grid of values for inference
-x_grid= np.linspace(x_neg, x_pos, x_spacing)#[::2]
-y_grid= np.linspace(y_neg, y_pos, y_spacing)#[::2]
+x_grid= omni_food_coord[0] + np.linspace(x_neg, x_pos, x_spacing)#[::2]
+y_grid= omni_food_coord[1] + np.linspace(y_neg, y_pos, y_spacing)#[::2]
 
-#x_grid=np.linspace(-catch_radius, catch_radius, 23)#[::2]
-#y_grid= np.linspace(-catch_radius, catch_radius, 23)#[::2]
 
 #create list of x and y values that form a grid
 xx_grid, yy_grid = np.meshgrid(x_grid,y_grid)
-#flatten to single dimension array and add the food coordinate value
-xx_grid = omni_food_coord[0] + xx_grid.flatten()
-yy_grid = omni_food_coord[1] + yy_grid.flatten()
+#flatten to single dimension array
+xx_grid =  xx_grid.flatten()
+yy_grid =  yy_grid.flatten()
 
-xx_grid_pixels = ((xx_grid-omni_food_coord[0])*ppm)+img_food_coord[0]
-yy_grid_pixels = ((yy_grid-omni_food_coord[1])*ppm)+img_food_coord[1]
+plt.scatter(xx_grid, yy_grid)
+plt.ylim(-0.5, 0.5)
+plt.xlim(-0.5, 0.5)
+plt.show()
+
+
+xx_grid_pixels = img_food_coord[0] + (xx_grid-omni_food_coord[0])*ppm # order matters in python
+yy_grid_pixels = img_food_coord[1] - (yy_grid-omni_food_coord[1])*ppm # axis offset for y
 
 #%
 figure, axes = plt.subplots()
@@ -61,7 +65,6 @@ figure.set_dpi(200)
 #arena_img = plt.imread(r"\trajectory_code\top-down_arena.png")
 arena_img = plt.imread(r"D:\Users\seyij\Projects\ant_trajectory\trajectory_code\top-down_arena.png")
 plt.imshow(arena_img)
-
 #make circles and add to plot
 catch_circle = plt.Circle((img_food_coord[0], img_food_coord[1]), 
                           catch_radius*ppm , fill = False, color="green")
@@ -71,6 +74,8 @@ axes.add_artist(catch_circle)
 axes.add_artist(food_circle)
 plt.show()
 
+print(x_grid)
+print(y_grid)
 #%% plot a single trajectory
 
 traject_coords1 = np.load(r"D:\Users\seyij\Projects\trial2025-05-15 15_30_42.274644.npy")[3] # extract one trajectory
@@ -105,7 +110,6 @@ plt.show()
 
 traject_coords = np.load(r"D:\Users\seyij\Projects\trial2025-05-15 15_30_42.274644.npy")
  # extract one trajectory
-
 start_position = (0.08, 0.6)
 
 plt.imshow(arena_img)
