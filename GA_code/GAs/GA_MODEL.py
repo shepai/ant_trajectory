@@ -30,14 +30,7 @@ class controller:
         self.geno[np.where(probailities<rate)]+=np.random.normal(0,self.std,self.geno[np.where(probailities<rate)].shape)
         self.geno[self.geno<-16]=-16
         self.geno[self.geno>16]=16
-        idx=0
-        for i in range(len(self.w)):
-            size=self.w[i].flatten().shape[0]
-            self.w[i]=self.geno[idx:idx+size].reshape(self.w[i].shape)
-            idx+=size
-            size=self.b[i].flatten().shape[0]
-            self.b[i]=self.geno[idx:idx+size].reshape(self.b[i].shape)
-            idx+=size
+        self.reform()
     def activation(self,x): #can replace with any activation function
         return 1/(1 + np.exp(-x))
     def step(self,x):
@@ -51,7 +44,15 @@ class controller:
         probabilities=np.random.random(self.gene_size)
         geno2.geno[np.where(probabilities<prob_winning)]=geno1.geno[np.where(probabilities<prob_winning)]
         return geno2
-    
+    def reform(self):
+        idx=0
+        for i in range(len(self.w)):
+            size=self.w[i].flatten().shape[0]
+            self.w[i]=self.geno[idx:idx+size].reshape(self.w[i].shape)
+            idx+=size
+            size=self.b[i].flatten().shape[0]
+            self.b[i]=self.geno[idx:idx+size].reshape(self.b[i].shape)
+            idx+=size
 
 class controller_LRF(controller):
     def step(self,x):

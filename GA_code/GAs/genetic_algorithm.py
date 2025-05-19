@@ -15,6 +15,8 @@ class GA:
         #self.initialize_population(controller,[_INPUT_SIZE_,[_H1_,_H2_],_OUTPUTSIZE_])
         self.sex=sex
     def initialize_population(self,contr,params,std=0.2):
+        self.contr=contr
+        self.params=params
         population=[]
         for i in range(self.pop_zise):
             population.append(contr(*params,std=std))   #@seyi this is where the network sizes go
@@ -134,6 +136,35 @@ class NEAT(GA):
                     
                     new_population.append(offspring)
         return np.array(history),fitness_matrix
+
+class Differential(GA):
+    def evolve(self,environment,fitness,outputs=False,rate=0.2):
+        history=[0]
+        fitness_matrix=np.zeros((self.pop_zise))
+        for i in range(self.pop_zise): #calculate current fitness of all genotypes
+            positions,target=environment.runTrial(self.pop[i])
+            fitness_matrix[i]=fitness(positions,target)
+        for gen in range(self.generations):
+            if outputs:
+                print("Generation",gen,"best fitness:",np.max(history))
+            for i in range(self.pop_zise): #select three distinct individuals
+                indices = [idx for idx in range(self.pop_zise) if idx != i]
+                r1, r2, r3 = np.random.choice(indices, 3, replace=False)
+                x1, x2, x3 = self.pop[r1].geno, self.pop[r2].geno, self.pop[r3].geno
+                dummy=self.contr(*self.params) #create dummy object
+                mutant = x1 + 0.2 * (x2 - x3)
+                dummy.geno=mutant #set the geno to the object
+                dummy.reform() #set the weights correct
+                #crossover
+                mutant=self.pop[i].sex(self.pop[i],dummy)
+                #selection
+                positions,target=environment.runTrial(mutant)
+                trial_fitness=fitness(positions,target)
+                if trial_fitness>fitness_matrix[i]:
+                    fitness_matrix[i]=trial_fitness
+                    self.pop[i]=deepcopy(mutant)
+            history.append(np.max(history))
+        return np.array(history), fitness_matrix
 if __name__ == "__main__": #test code to run in same file
     _INPUT_SIZE_=10
     _H1_=10
@@ -148,13 +179,13 @@ if __name__ == "__main__": #test code to run in same file
         def runTrial(self,geno):
             return [0,0,0,0],[0,0,0,0]
 
-    ga=NEAT(100,10,0.2,sex=1)
+    ga=Differential(100,10,0.2,sex=1)
     ga.initialize_population(controller,[_INPUT_SIZE_,[_H1_,_H2_],_OUTPUTSIZE_])
     history,fitness=ga.evolve(environment_example(),fitness_func,outputs=1) 
     print(history)
 
     #cnn example
-    ga=NEAT(100,10,0.2,sex=1)
+    ga=Differential(100,10,0.2,sex=1)
     
     input_shape = (20, 20)  #20x20 grayscale input image
     kernel_sizes = [[3,2], [3,2]]   #two convolution layers with 3x3 kernels
