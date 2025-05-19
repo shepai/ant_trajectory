@@ -423,4 +423,4 @@ def transform_model_trajects(traject_coords_path,
     
     plt.tight_layout()
     plt.savefig(savefig)
-    plt.show()
+    plt.close()

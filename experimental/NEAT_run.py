@@ -22,9 +22,9 @@ def fitness(trajectory, distances):
     return improvement
 
 #microbial GA
-ga=NEAT(1000,100,2,sex=1) #
+ga=NEAT(100,50,2,sex=1) #
 ga.initialize_population(controllerCNN_LRF,[_INPUT_SIZE_,200,_OUTPUTSIZE_],std=2)
-print("Begin tria6l")
+print("Begin trial")
 history,fitness=ga.evolve(env,fitness,outputs=True) #run the GA
 print(fitness.shape)
 #from here you will want to find the best one from ga population from our fitness matrix
@@ -35,7 +35,8 @@ plt.xlabel("Generations")
 plt.ylabel("Popoulation max fitness value")
 plt.title("Generations vs Fitness")
 plt.tight_layout()
-#plt.savefig("/its/home/drs25/ant_trajectory/data/trial/trial"+str(datetime.datetime.now())+".pdf")
+date=str(datetime.datetime.now()).replace(":","_")
+plt.savefig("/its/home/drs25/ant_trajectory/data/NEAT/fitness"+str(date)+".pdf")
 plt.close()
 del env
 env=environment(record=1)
@@ -46,7 +47,7 @@ for i in range(len(ga.pop)):
     path,dist=env.runTrial(geno)
     pathways.append(path)
    
-date=str(datetime.datetime.now()).replace(":","_")
+
 ##########
 transform_model_trajects(pathways, 
     image_path="/its/home/drs25/ant_trajectory/trajectory_code/testA_ant1_image.jpg", savefig="/its/home/drs25/ant_trajectory/data/NEAT/show"+date+".pdf", x_scale=1)
@@ -61,6 +62,7 @@ for arr in pathways:
         padded = arr
     padded_pathways.append(padded)
 pathways = np.stack(padded_pathways)
+print(pathways.shape,"____________")
 np.save("/its/home/drs25/ant_trajectory/data/NEAT/trial"+date.replace(":","_"),pathways)
 path,dist=env.runTrial(best_genotype)
 env.out.release()
