@@ -1,5 +1,5 @@
 import numpy as np
-
+import random 
 class controller:
     def __init__(self,input_size,hiddensizes,output,std=2):
         """
@@ -116,6 +116,82 @@ class controllerCNN:
         self.geno[np.where(probailities<rate)]+=np.random.normal(0,self.std,self.geno[np.where(probailities<rate)].shape).astype(np.float32)
         self.geno[self.geno<-5]=-5
         self.geno[self.geno>5]=5
+        self.reform()
+        print("mutated")
+
+    def activation(self, x):
+        return np.tanh(x)
+
+    def forward(self, x):
+        x = x.copy()
+        pointer = 0
+        x = x.squeeze() 
+        in_data = x[np.newaxis, :, :]  #add channel dimension
+
+        for layer_idx, (ksize, nkernels) in enumerate(zip(self.kernel_sizes, self.num_kernels)):
+            kernels_shape = (nkernels, in_data.shape[0], ksize[0], ksize[1])
+            num_kernel_params = np.prod(kernels_shape)
+            kernels = self.geno[pointer:pointer+num_kernel_params].reshape(kernels_shape)
+            pointer += num_kernel_params
+
+            biases_shape = (nkernels,)
+            biases = self.geno[pointer:pointer+nkernels]
+            pointer += nkernels
+
+            #convolve
+            out_data = []
+            for i in range(nkernels):
+                summed = np.zeros((
+                    in_data.shape[1] - ksize[0] + 1,
+                    in_data.shape[2] - ksize[1] + 1
+                ))
+                for j in range(in_data.shape[0]):  #over input channels
+                    summed += scipy.signal.correlate2d(in_data[j], kernels[i, j], mode='valid')
+                summed += biases[i]
+                out_data.append(self.activation(summed))
+            in_data = np.array(out_data)
+
+        #flatten and fully connect
+        flat = in_data.flatten()
+        #pass through
+        x=flat
+        for i in range(len(self.w)):
+            x=self.relu(np.dot(x,self.w[i])+self.b[i])
+        output=x
+        return output
+    def step(self,x):
+        return self.forward(x)
+    def relu(self,x):
+        return np.maximum(0, x)
+    def sex(self,geno1,geno2,prob_winning=0.6):
+        probabilities=np.random.random(self.gene_size)
+        geno2.geno[np.where(probabilities<prob_winning)]=geno1.geno[np.where(probabilities<prob_winning)]
+        return geno2
+    def insert_layer(self,weights,bias,n):
+        self.w.insert(n,weights)
+        self.b.insert(n,bias)
+        idx=self.kernel_vals
+        assert n>0 and n<len(self.w),"no weight there"
+        for i in range(len(self.w)):
+            if i==n: #if it is the layer
+                self.geno=np.concatenate([self.geno[:idx],weights.flatten(),self.geno[idx:]])
+                self.geno=np.concatenate([self.geno[:idx+len(weights.flatten())],bias.flatten(),self.geno[idx+len(weights.flatten()):]])
+            idx+=len(self.w[i].flatten())+len(self.b[i].flatten())
+        self.reform()
+    def delete_layer(self):
+        if len(self.w)>2: #can delete
+            n=random.choice([i for i in range(1,len(self.w)-1)])
+            del self.w[n]
+            del self.b[n]
+            #remove geno part
+            idx=self.kernel_vals
+            for i in range(len(self.w)):
+                if i==n: #if it is the layer
+                    self.geno = np.concatenate((self.geno[:idx], self.geno[idx+len(self.w[i].flatten()):]))
+                    self.geno = np.concatenate((self.geno[:idx], self.geno[idx+len(self.b[i].flatten()):]))
+                idx+=len(self.w[i].flatten())+len(self.b[i].flatten())
+        self.reform()
+    def reform(self):
         idx=0
         in_channels = 1 
         for ksize, nkernels in zip(self.kernel_sizes, self.num_kernels):
@@ -135,88 +211,16 @@ class controllerCNN:
             size=self.b[i].flatten().shape[0]
             self.b[i]=self.geno[idx:idx+size].reshape(self.b[i].shape)
             idx+=size
-        print("mutated")
-
-    def activation(self, x):
-        return np.tanh(x)
-
-    def step(self, x):
-        x = x.copy()
-        pointer = 0
-        x = x.squeeze() 
-        in_data = x[np.newaxis, :, :]  #add channel dimension
-
-        for layer_idx, (ksize, nkernels) in enumerate(zip(self.kernel_sizes, self.num_kernels)):
-            kernels_shape = (nkernels, in_data.shape[0], ksize[0], ksize[1])
-            num_kernel_params = np.prod(kernels_shape)
-            kernels = self.geno[pointer:pointer+num_kernel_params].reshape(kernels_shape)
-            pointer += num_kernel_params
-
-            biases_shape = (nkernels,)
-            biases = self.geno[pointer:pointer+nkernels]
-            pointer += nkernels
-
-            #convolve
-            out_data = []
-            for i in range(nkernels):
-                summed = np.zeros((
-                    in_data.shape[1] - ksize[0] + 1,
-                    in_data.shape[2] - ksize[1] + 1
-                ))
-                for j in range(in_data.shape[0]):  #over input channels
-                    summed += scipy.signal.correlate2d(in_data[j], kernels[i, j], mode='valid')
-                summed += biases[i]
-                out_data.append(self.activation(summed))
-            in_data = np.array(out_data)
-
-        #flatten and fully connect
-        flat = in_data.flatten()
-        #pass through
-        x=self.relu(np.dot(flat,self.w[0])+self.b[0])
-        output=np.dot(x,self.w[1])+self.b[1]
-        return output
-    def relu(self,x):
-        return np.maximum(0, x)
-    def sex(self,geno1,geno2,prob_winning=0.6):
-        probabilities=np.random.random(self.gene_size)
-        geno2.geno[np.where(probabilities<prob_winning)]=geno1.geno[np.where(probabilities<prob_winning)]
-        return geno2
-
+    def show(self):
+        print("NETWORK ARCH")
+        for ksize, nkernels in zip(self.kernel_sizes, self.num_kernels):
+            print("\tCNN layer",ksize,nkernels)
+        for i in range(len(self.w)):
+            print("\tLinear layer",self.w[i].shape)
+            print("\tBias",self.b[i].shape)
 class controllerCNN_LRF(controllerCNN):
     def step(self, x):
-        x = x.copy()
-        pointer = 0
-        x = x.squeeze() 
-        in_data = x[np.newaxis, :, :]  #add channel dimension
-
-        for layer_idx, (ksize, nkernels) in enumerate(zip(self.kernel_sizes, self.num_kernels)):
-            kernels_shape = (nkernels, in_data.shape[0], ksize[0], ksize[1])
-            num_kernel_params = np.prod(kernels_shape)
-            kernels = self.geno[pointer:pointer+num_kernel_params].reshape(kernels_shape)
-            pointer += num_kernel_params
-
-            biases_shape = (nkernels,)
-            biases = self.geno[pointer:pointer+nkernels]
-            pointer += nkernels
-
-            #convolve
-            out_data = []
-            for i in range(nkernels):
-                summed = np.zeros((
-                    in_data.shape[1] - ksize[0] + 1,
-                    in_data.shape[2] - ksize[1] + 1
-                ))
-                for j in range(in_data.shape[0]):  #over input channels
-                    summed += scipy.signal.correlate2d(in_data[j], kernels[i, j], mode='valid')
-                summed += biases[i]
-                out_data.append(self.activation(summed))
-            in_data = np.array(out_data)
-
-        #flatten and fully connect
-        flat = in_data.flatten()
-        #pass through
-        x=self.relu(np.dot(flat,self.w[0])+self.b[0])
-        output=np.dot(x,self.w[1])+self.b[1]
+        output=self.forward(x)
         return np.argmax(output)
     
 if __name__=="__main__":
@@ -226,4 +230,15 @@ if __name__=="__main__":
     print("Mutating")
     control.mutate()
     out=control.step(np.random.random((1,40,8,1)))
-    print(out)
+    layer=[np.random.normal(1,5,(512,512)),np.random.normal(1,5,(512,))]
+    control.insert_layer(layer[0],layer[1],1)
+    control.show()
+    layer=[np.random.normal(1,5,(512,512)),np.random.normal(1,5,(512,))]
+    control.insert_layer(layer[0],layer[1],1)
+    control.show()
+    control.delete_layer()
+    control.show()
+    control.delete_layer()
+    control.show()
+    control.delete_layer()
+    control.show()
