@@ -5,7 +5,7 @@ import cv2
 import matplotlib.pyplot as plt
 import matplotlib
 import time
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 class environment:
     def __init__(self,data="/data/full_arena_grid_infer_views/",show=0,record=0):
         #form the correct datapaths
@@ -96,7 +96,7 @@ class environment:
     def died(self):
         x,y=self.agent_pos
         if x<np.min(self.x) or y<np.min(self.y) or x>np.max(self.x) or y>np.max(self.y):
-            print(x,y,np.min(self.x),np.min(self.y),np.max(self.x),np.max(self.y))
+            #print(x,y,np.min(self.x),np.min(self.y),np.max(self.x),np.max(self.y))
             return True
         return False
     def visualise(self):
@@ -104,7 +104,7 @@ class environment:
         traj=np.array(self.trajectory)
         plt.plot(traj[:,0],traj[:,1])
         plt.show()
-    def runTrial(self,agent,T=1,dt=0.05): #run a trial
+    def runTrial(self,agent,T=3,dt=0.01): #run a trial
         t_=time.time()
         self.reset()
         self.trajectory.append(self.agent_pos.copy())
@@ -115,7 +115,7 @@ class environment:
             observation=observation.reshape((1,*observation.shape,1)) if "CNN" in str(agent.__class__) else np.concatenate([observation.flatten(),np.array(self.target)])
             vel=agent.step(observation/255)  #get agent prediction #ODO update for CNN
             if "LRF" in str(agent.__class__):
-                options=[[0,1.5],[1.5,0],[1,1]]
+                options=[[0,1.5],[1.5,0],[.1,.1]]
                 problem=self.moveAgent(*options[vel]) #move to target
             else: 
                 problem=self.moveAgent(vel[0],vel[1]) #move to target

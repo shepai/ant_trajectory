@@ -1,17 +1,19 @@
 import sys
 sys.path.insert(1,"/its/home/drs25/ant_trajectory") #put path here
+from trajectory_code.trajectory_process_functions import transform_model_trajects
 from grid_environment import environment
 from RL_code.DQNAgent import DQNAgent
 import numpy as np
-
+import datetime 
 env=environment() #call in demo environment
 image=env.getAntVision()
-agent=DQNAgent(image.shape,3,"cpu")
+agent=DQNAgent(image.shape,3,"cuda")
 
 T=1
-dt=0.05
+dt=0.01
+env.dt=dt
 path_hist=[]
-for j in range(100):
+for j in range(3000):
     env.reset()
     state= env.getAntVision()
     total_reward=0
@@ -22,9 +24,24 @@ for j in range(100):
         agent.train_step()  # learn from experience
         state = next_state
         total_reward+=reward
+        if done: break
     path_hist.append(np.array(env.trajectory).copy())
     print("Trial",j,"Reward:",total_reward)
 
+date=str(datetime.datetime.now()).replace(":","_")
+##########
+transform_model_trajects(path_hist, 
+    image_path="/its/home/drs25/ant_trajectory/trajectory_code/testA_ant1_image.jpg", savefig="/its/home/drs25/ant_trajectory/data/RL_TRIAL/show"+date+".pdf", x_scale=1)
+p=[]
+for path in path_hist:
+    if (len(np.arange(0,T,dt))-len(path)) > 0 :
+        p.append(path+[[0,0]]*(len(np.arange(0,T,dt))-len(path)))
+    else: p.append(path)
+np.save("/its/home/drs25/ant_trajectory/data/RL_TRIAL/data"+str(date),np.array(p))
+
+"""
+
+##################
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.collections import LineCollection
@@ -51,4 +68,4 @@ plt.title('Paths with color bar')
 
 #save everything 
 
-plt.show()
+plt.show()"""
