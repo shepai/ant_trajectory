@@ -33,6 +33,7 @@ class environment:
         self.agent_pos=[0.08,0.6]
         self.angle=0
         self.trajectory=[]
+        self.prev_distance = np.linalg.norm(np.array(self.agent_pos) - np.array(self.target)) # this saves the initial distance from the agent to the target for comparison after each step
         if self.recording:
             self.out.release()
             self.recording=0
@@ -142,7 +143,14 @@ class environment:
         observation = self.getAntVision()
         traj=np.array(self.trajectory)
         #@alej this is how I have put in reward but feel free to change it
-        reward=np.linalg.norm(traj[0]-traj[-1])
+        #reward=np.linalg.norm(traj[0]-traj[-1]) # @dex I seem to understand that there is a larger reward for covering more distance rather than getting closer to the food
+        
+        curr_distance = np.linalg.norm(np.array(self.agent_pos) - np.array(self.target)) #I hope this works... It should basically calculate a reward based on how closer to the target the agent gets
+        reward = self.prev_distance - curr_distance  # positive if getting closer
+        self.prev_distance = curr_distance
+        # Optional penalty for dying 
+        if self.died():
+            reward -= 10  # strong negative penalty. Don't die lil ant
         info={}
         return observation,reward,done,info
 if __name__=="__main__":
