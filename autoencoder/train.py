@@ -54,6 +54,8 @@ def imshow(imgs, title=""):
     plt.axis('off')
     plt.show()
 
+torch.save(model.state_dict(), "/its/home/drs25/ant_trajectory/autoencoder/flexiencoder_weights.pth")
+
 # Show a few original and reconstructed images
 model.eval()
 with torch.no_grad():
@@ -64,4 +66,4 @@ with torch.no_grad():
     imshow(test_imgs[:16], "Original Images")
     imshow(recon[:16], "Reconstructed Images")
 
-torch.save(model.state_dict(), "/its/home/drs25/ant_trajectory/autoencoder/flexiencoder_weights.pth")
+
