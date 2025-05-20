@@ -136,6 +136,7 @@ class NEAT(GA):
                         offspring.insert_layer(np.random.normal(0,offspring.std,(512,512)),np.random.normal(0,offspring.std,(512,)))
                     
                     new_population.append(offspring)
+            self.pop=deepcopy(new_population)
         return np.array(history),fitness_matrix
 
 class Differential(GA):
@@ -153,7 +154,7 @@ class Differential(GA):
                 r1, r2, r3 = np.random.choice(indices, 3, replace=False)
                 x1, x2, x3 = self.pop[r1].geno, self.pop[r2].geno, self.pop[r3].geno
                 dummy=self.contr(*self.params) #create dummy object
-                mutant = x1 + 0.2 * (x2 - x3)
+                mutant = x1 + 0.5 * (x2 - x3)
                 dummy.geno=mutant #set the geno to the object
                 dummy.reform() #set the weights correct
                 #crossover
@@ -164,7 +165,7 @@ class Differential(GA):
                 if trial_fitness>fitness_matrix[i]:
                     fitness_matrix[i]=trial_fitness
                     self.pop[i]=deepcopy(mutant)
-            history.append(np.max(history))
+            history.append(np.max(fitness_matrix))
         return np.array(history), fitness_matrix
 if __name__ == "__main__": #test code to run in same file
     _INPUT_SIZE_=10

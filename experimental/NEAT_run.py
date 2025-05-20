@@ -10,7 +10,7 @@ import matplotlib
 import datetime
 import os
 import pickle
-def save_array_to_folder(base_dir, folder_name, fitness, pathways, ga):
+def save_array_to_folder(base_dir, folder_name, fitness, pathways, ga,best_genotype):
     folder_path = os.path.join(base_dir, folder_name)
     # Create folder if it doesn't exist
     os.makedirs(folder_path, exist_ok=True)
@@ -18,7 +18,7 @@ def save_array_to_folder(base_dir, folder_name, fitness, pathways, ga):
     np.save(folder_path+"/fitnesses", fitness)
     
     transform_model_trajects(pathways, 
-        image_path="/its/home/drs25/ant_trajectory/trajectory_code/testA_ant1_image.jpg", savefig=folder_path+"pathsTaken.pdf", x_scale=1)
+        image_path="/its/home/drs25/ant_trajectory/trajectory_code/testA_ant1_image.jpg", savefig=folder_path+"/pathsTaken.pdf", x_scale=1)
     max_v = max(arr.shape[0] for arr in pathways)
     padded_pathways = []
     for arr in pathways:
@@ -53,7 +53,7 @@ def run(experiment_name,generations,population):
     _INPUT_SIZE_=cv2.resize(env.getObservation(), (8, 48), interpolation = cv2.INTER_AREA).shape[:2] #the 2 is for the target location, but realistically it will not know where the target is
     _OUTPUTSIZE_=3
     #microbial GA
-    ga=NEAT(100,10,2,sex=1) #
+    ga=NEAT(generations,population,2,sex=1) #
     #ga.initialize_population(controllerCNN_LRF,[_INPUT_SIZE_,200,_OUTPUTSIZE_],std=2)
     ga.initialize_population(controller,[32,[10,5],_OUTPUTSIZE_])
     print("Begin tria6l")
@@ -61,9 +61,6 @@ def run(experiment_name,generations,population):
     print(fitness.shape)
     #from here you will want to find the best one from ga population from our fitness matrix
     best_genotype=ga.pop[np.argmax(fitness)]
-
-    
-    del env
     
     pathways=[]
 
@@ -72,8 +69,8 @@ def run(experiment_name,generations,population):
         path,dist=env.runTrial(geno)
         pathways.append(path)
 
-    save_array_to_folder("/its/home/drs25/ant_trajectory/data/NEAT/", experiment_name, history, pathways, ga)
+    save_array_to_folder("/its/home/drs25/ant_trajectory/data/NEAT/", experiment_name, history, pathways, ga,best_genotype)
     ##########
     
 if __name__=="__main__":
-    run("sin_wave",1000,100)
+    run("sin_wave",500,100)

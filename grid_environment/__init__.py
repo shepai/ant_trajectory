@@ -5,10 +5,15 @@ import cv2
 import matplotlib.pyplot as plt
 import matplotlib
 import time
+try:
+    from autoencoder.encode import encode
+except:
+    print("error starting auto encoder")
 #matplotlib.use('TkAgg')
 class environment:
-    def __init__(self,data="/data/full_arena_grid_infer_views/",show=0,record=0):
+    def __init__(self,data="/data/full_arena_grid_infer_views/",show=0,record=0,filename="output.avi"):
         #form the correct datapaths
+        self.filename=filename
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.path=script_dir.replace("grid_environment","")
         self.datapath=self.path+data
@@ -42,7 +47,7 @@ class environment:
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
             height, width = frame.shape[:2]
             self.out = cv2.VideoWriter(
-                self.path + '/data/video_generator/output2.avi',
+                self.filename,
                 fourcc, 20.0, (width, height)
             )
             if not self.out.isOpened():
@@ -115,7 +120,7 @@ class environment:
         self.dt=dt
         for t in np.arange(0,T,dt): #loop through timesteps
             observation = self.getAntVision()
-            observation=observation.reshape((1,*observation.shape,1)) if "CNN" in str(agent.__class__) else observation.flatten()
+            observation=observation.reshape((1,*observation.shape,1)) if "CNN" in str(agent.__class__) else encode(observation)
             vel=agent.step(observation/255)  #get agent prediction #ODO update for CNN
             if "LRF" in str(agent.__class__):
                 options=[[0,1.5],[1.5,0],[.1,.1]]
@@ -178,7 +183,7 @@ if __name__=="__main__":
 
     ar=np.array(ar)
     print(ar.shape)
-    np.save("/its/home/drs25/ant_trajectory/autoencoder/allangles",ar)
+    #np.save("/its/home/drs25/ant_trajectory/autoencoder/allangles",ar)
 
         
     

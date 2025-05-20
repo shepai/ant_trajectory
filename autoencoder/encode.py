@@ -1,8 +1,8 @@
-from model import FlexibleAutoencoder
+from autoencoder.model import FlexibleAutoencoder
 import torch
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model=FlexibleAutoencoder().to(device)
-model.load_state_dict(torch.load("/its/home/drs25/ant_trajectory/autoencoder/flexiencoder_weights.pth"))
+model.load_state_dict(torch.load("/its/home/drs25/ant_trajectory/autoencoder/flexiencoder_weights.pth", weights_only=True))
 model.eval()
 
 def encode(data):
