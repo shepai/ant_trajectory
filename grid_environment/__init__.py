@@ -16,6 +16,9 @@ class environment:
         self.grid=pd.read_csv(self.datapath+"/full_grid_views_meta_data.csv")
         self.x=self.grid["x_m"]
         self.y=self.grid["y_m"]
+        self.files={}
+        for f in self.grid['img_name']:
+            self.files[f]=cv2.resize(cv2.cvtColor(cv2.imread(self.datapath+'/'+f).astype(np.uint8), cv2.COLOR_BGR2GRAY), (8, 48), interpolation = cv2.INTER_AREA)
         self.show=show
         self.record=record
         self.recording=0
@@ -51,7 +54,7 @@ class environment:
         offset = int(pixels_per_degree * np.degrees(self.angle))
         # Shift image horizontally (wrap around using numpy.roll)
         rotated = np.roll(image, -offset, axis=1)  # negative for clockwise
-        rotated=cv2.cvtColor(rotated, cv2.COLOR_BGR2GRAY)
+        #rotated=cv2.cvtColor(rotated, cv2.COLOR_BGR2GRAY)
         return rotated
     def find_nearest(self,x,y):
         closest_x = min(range(len(self.x)), key=lambda i: abs(self.x[i] - x))
@@ -61,7 +64,7 @@ class environment:
         condition = np.isclose(self.grid['x_m'], x_val) & np.isclose(self.grid['y_m'], y_val)
         nearest_row = self.grid[condition]
         if not nearest_row.empty:
-            return cv2.imread(self.datapath+'/'+nearest_row['img_name'].values[0])
+            return self.files[nearest_row['img_name'].values[0]]
         else:
             print("Error: Cooked *skull face emoji*")
             return None
@@ -104,7 +107,7 @@ class environment:
         traj=np.array(self.trajectory)
         plt.plot(traj[:,0],traj[:,1])
         plt.show()
-    def runTrial(self,agent,T=3,dt=0.01): #run a trial
+    def runTrial(self,agent,T=1,dt=0.01): #run a trial
         t_=time.time()
         self.reset()
         self.trajectory.append(self.agent_pos.copy())
@@ -112,7 +115,7 @@ class environment:
         self.dt=dt
         for t in np.arange(0,T,dt): #loop through timesteps
             observation = self.getAntVision()
-            observation=observation.reshape((1,*observation.shape,1)) if "CNN" in str(agent.__class__) else np.concatenate([observation.flatten(),np.array(self.target)])
+            observation=observation.reshape((1,*observation.shape,1)) if "CNN" in str(agent.__class__) else observation.flatten()
             vel=agent.step(observation/255)  #get agent prediction #ODO update for CNN
             if "LRF" in str(agent.__class__):
                 options=[[0,1.5],[1.5,0],[.1,.1]]
@@ -124,7 +127,7 @@ class environment:
         #print("\tRan trial in",(time.time()-t_),"seconds")
         return np.array(self.trajectory), np.array(dist)
     def getAntVision(self):
-        observation = cv2.resize(self.getObservation(), (8, 48), interpolation = cv2.INTER_AREA)
+        observation=self.getObservation()#observation = cv2.resize(self.getObservation(), (8, 48), interpolation = cv2.INTER_AREA)
         return observation.reshape((1,*observation.shape))
     def step(self,action):
         #action should be the left right turn
@@ -139,7 +142,7 @@ class environment:
         return observation,reward,done,info
 if __name__=="__main__":
     env=environment(show=1,record=1)
-    import keyboard
+    """import keyboard
     import time
     x, y = 0.0, 0.0
     step = 0.1
@@ -159,6 +162,23 @@ if __name__=="__main__":
     except KeyboardInterrupt:
         env.out.release()
         plt.close()
-        env.visualise()
+        env.visualise()"""
+    ar=[]
+    c=0
+    for file in env.files:
+        for theta in range(360):
+            print(c,"images processed")
+            image=env.files[file].copy()
+            pixels_per_degree = image.shape[1] / 360.0
+            offset = int(pixels_per_degree * np.degrees(theta))
+            # Shift image horizontally (wrap around using numpy.roll)
+            rotated = np.roll(image, -offset, axis=1)  # negative for clockwise
+            ar.append(image)
+            c+=1
+
+    ar=np.array(ar)
+    print(ar.shape)
+    np.save("/its/home/drs25/ant_trajectory/autoencoder/allangles",ar)
+
         
     
