@@ -10,7 +10,7 @@ import matplotlib
 import datetime
 import os
 import pickle
-def save_array_to_folder(base_dir, folder_name, fitness, pathways, ga,best_genotype):
+def save_array_to_folder(base_dir, folder_name, fitness, pathways, ga,best_genotype,genes_time):
     folder_path = os.path.join(base_dir, folder_name)
     # Create folder if it doesn't exist
     os.makedirs(folder_path, exist_ok=True)
@@ -18,7 +18,9 @@ def save_array_to_folder(base_dir, folder_name, fitness, pathways, ga,best_genot
     np.save(folder_path+"/fitnesses", fitness)
     
     transform_model_trajects(pathways, 
-        image_path="/its/home/drs25/ant_trajectory/trajectory_code/testA_ant1_image.jpg", savefig=folder_path+"pathsTaken.pdf", x_scale=1)
+        image_path="/its/home/drs25/ant_trajectory/trajectory_code/testA_ant1_image.jpg", savefig=folder_path+"/pathsTaken.pdf", x_scale=1)
+    transform_model_trajects(genes_time, 
+        image_path="/its/home/drs25/ant_trajectory/trajectory_code/testA_ant1_image.jpg", savefig=folder_path+"/genes_time_paths.pdf", x_scale=1,time_element=True)
     max_v = max(arr.shape[0] for arr in pathways)
     padded_pathways = []
     for arr in pathways:
@@ -32,10 +34,22 @@ def save_array_to_folder(base_dir, folder_name, fitness, pathways, ga,best_genot
     np.save(folder_path+"/routes", routes)
     with open(folder_path+"/GA", 'wb') as f:
         pickle.dump(ga, f)
-
+    max_v = max(arr.shape[0] for arr in genes_time)
+    padded_pathways = []
+    for arr in pathways:
+        pad_length = max_v - arr.shape[0]
+        if pad_length > 0:
+            padded = np.vstack([arr, np.zeros((pad_length, 2))])
+        else:
+            padded = arr
+        padded_pathways.append(padded)
+    routes = np.stack(padded_pathways)
+    np.save(folder_path+"/routes_over_time", routes)
     env=environment(record=1,filename=folder_path+"/output.avi")
     path,dist=env.runTrial(best_genotype)
     env.out.release()
+
+
     
     print(f"Array saved to: {folder_path}")
 
@@ -68,8 +82,15 @@ def run(experiment_name,generations,population):
         path,dist=env.runTrial(geno)
         pathways.append(path)
 
-    save_array_to_folder("/its/home/drs25/ant_trajectory/data/trial/", experiment_name, history, pathways, ga,best_genotype)
+    genes_over_time=ga.best_genos_time
+    genes_time=[]
+    for i in range(len(ga.pop)):
+        geno=ga.pop[i]
+        path,dist=env.runTrial(geno)
+        genes_time.append(path)
+    
+    save_array_to_folder("/its/home/drs25/ant_trajectory/data/trial/", experiment_name, history, pathways, ga,best_genotype,genes_time)
     ##########
     
 if __name__=="__main__":
-    run("sin_wave",500,50)
+    run("test",2,3)
