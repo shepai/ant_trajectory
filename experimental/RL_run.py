@@ -5,11 +5,12 @@ import datetime
 import os
 from trajectory_code.trajectory_process_functions import transform_model_trajects
 from grid_environment import environment
-from RL_code.DQNAgent import DQNAgent
+from RL_code.DQNAgent import DQNAgent, ContinuousAgent
 import torch
 import datetime
 import json
 import csv
+import matplotlib.pyplot as plt
 def save_array_to_folder(base_dir, folder_name, fitness, pathways):
     folder_path = os.path.join(base_dir, folder_name)
     # Create folder if it doesn't exist
@@ -33,13 +34,13 @@ def save_array_to_folder(base_dir, folder_name, fitness, pathways):
     
     print(f"Array saved to: {folder_path}")
 
-
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 #just adding some extra saving of things
 def run(experiment_name, epochs, save_dir="./trained_models"):
     env = environment()
     image = env.getAntVision()
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    agent = DQNAgent(image.shape, 3, device)
+    agent = ContinuousAgent(image.shape, device)
 
     T = 1
     dt = 0.01
@@ -48,7 +49,7 @@ def run(experiment_name, epochs, save_dir="./trained_models"):
     reward_hist = []
     epsilon_hist = []
 
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    
     experiment_folder = os.path.join(save_dir, f"{experiment_name}_{timestamp}")
     os.makedirs(experiment_folder, exist_ok=True)
     csv_log_path = os.path.join(experiment_folder, "training_rewards.csv")
@@ -78,7 +79,7 @@ def run(experiment_name, epochs, save_dir="./trained_models"):
             total_reward = 0
             for t in np.arange(0, T, dt):
                 action = agent.step(state)
-                next_state, reward, done, _ = env.step(action)
+                next_state, reward, done, _ = env.step(action*10)
                 agent.store_transition(state, action, reward, next_state, done)
                 agent.train_step()
                 state = next_state
@@ -90,6 +91,9 @@ def run(experiment_name, epochs, save_dir="./trained_models"):
             path_hist.append(np.array(env.trajectory).copy())
             writer.writerow([j + 1, total_reward, agent.epsilon])
             print(f"Trial {j}: Reward: {total_reward:.2f}, Epsilon: {agent.epsilon:.4f}")
+            if j%50==0 and j!=0:
+                save_array_to_folder(experiment_folder, "trajectories", np.array(reward_hist), path_hist)
+
 
     # Save training results and model
     save_array_to_folder(experiment_folder, "trajectories", np.array(reward_hist), path_hist)
@@ -114,13 +118,13 @@ def run(experiment_name, epochs, save_dir="./trained_models"):
 
     plt.tight_layout()
     plt.savefig(os.path.join(experiment_folder, "training_summary.png"))
-    plt.show()
+    plt.close()
 
 if __name__=="__main__":
     # run("test",20)
 # I admit that this is not the most important change but I saw someone implementing this and I thought it looked super profesh, so might as well. If we don't like it, we can change it
     # this allows us to run the script from the terminal like "python RL_run.py --experiment baseline --epochs 50 --save_dir /tmp/my_training"
-    run("TEST", 100, "/its/home/drs25/ant_trajectory/data/RL_TRIAL/")
+    run("TESTsin", 500, "/its/home/drs25/ant_trajectory/data/RL_TRIAL/")
 
     
 
