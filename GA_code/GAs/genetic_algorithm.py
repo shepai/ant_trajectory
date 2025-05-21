@@ -15,6 +15,7 @@ class GA:
         #self.initialize_population(controller,[_INPUT_SIZE_,[_H1_,_H2_],_OUTPUTSIZE_])
         self.sex=sex
         self.best_genos_time=[]
+        self.pop=[]
     def initialize_population(self,contr,params,std=0.2):
         self.contr=contr
         self.params=params
@@ -22,6 +23,34 @@ class GA:
         for i in range(self.pop_zise):
             population.append(contr(*params,std=std))   #@seyi this is where the network sizes go
         self.pop=population
+
+class Random_walk(GA):
+    def evolve(self,environment,fitness,outputs=False):
+        history=[0]
+        for gen in range(self.generations): #begin actual evolution
+            if outputs:
+                print("Generation",gen,"best fitness:",max(history))
+            environment.reset()
+            print(environment.agent_pos)
+            traj=[]
+            dist=[]
+            b=False
+            for i in np.arange(0,1,environment.dt):
+                direction=[np.array([0,1]),np.array([1,0]),np.array([1,1])]
+                speed=np.random.uniform(-0.5,0.5)*10
+                vel=random.choice(direction)*speed
+                b=environment.moveAgent(*vel)
+                traj.append(environment.agent_pos)
+                dist.append(np.linalg.norm(np.array(environment.agent_pos)-np.array(environment.target))) #distance to target collection
+                if b: break
+            if not b:
+                self.pop.append(np.array(deepcopy(traj)))
+            f=fitness(np.array(traj),np.array(dist))
+            history.append(f)
+            self.best_genos_time.append(np.array(deepcopy(traj)))
+
+        return np.array(history),np.array([])
+
 class Hillclimbers(GA):
     def evolve(self,environment,fitness,outputs=False):
         fitness_matrix=np.zeros((self.pop_zise))
