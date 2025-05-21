@@ -383,7 +383,7 @@ def distance(p1, p2):
     return np.linalg.norm(np.array(p1) - np.array(p2))
     
 def transform_model_trajects(traject_coords_path, 
-                             image_path=r"trajectory_code\top_down_is.png", savefig="",time_element=False):
+                             image_path=r"trajectory_code\top_down_is.png", savefig="",time_element=False,x_scale=0):
     
     """Function to plot a series of trajectories from the simulation environment in metres,
     and plot them on top of an image of the real life environment in pixels.
