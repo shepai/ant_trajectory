@@ -156,7 +156,7 @@ class environment:
         vec_to_goal = np.array(self.target) - np.array(self.agent_pos)
         unit_vec = vec_to_goal / (np.linalg.norm(vec_to_goal) + 1e-6)
 
-       curr_distance = np.linalg.norm(np.array(self.agent_pos) - np.array(self.target))
+        curr_distance = np.linalg.norm(np.array(self.agent_pos) - np.array(self.target))
         distance_reward = prev_dist - curr_distance
     
         # Directional reward
