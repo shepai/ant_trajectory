@@ -6,7 +6,10 @@ import os
 from trajectory_code.trajectory_process_functions import transform_model_trajects
 from grid_environment import environment
 from RL_code.DQNAgent import DQNAgent
-
+import torch
+import datetime
+import json
+import csv
 def save_array_to_folder(base_dir, folder_name, fitness, pathways):
     folder_path = os.path.join(base_dir, folder_name)
     # Create folder if it doesn't exist
@@ -45,7 +48,7 @@ def run(experiment_name, epochs, save_dir="./trained_models"):
     reward_hist = []
     epsilon_hist = []
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     experiment_folder = os.path.join(save_dir, f"{experiment_name}_{timestamp}")
     os.makedirs(experiment_folder, exist_ok=True)
     csv_log_path = os.path.join(experiment_folder, "training_rewards.csv")
@@ -117,14 +120,7 @@ if __name__=="__main__":
     # run("test",20)
 # I admit that this is not the most important change but I saw someone implementing this and I thought it looked super profesh, so might as well. If we don't like it, we can change it
     # this allows us to run the script from the terminal like "python RL_run.py --experiment baseline --epochs 50 --save_dir /tmp/my_training"
-    import torch
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--experiment", type=str, default="test", help="Experiment name prefix")
-    parser.add_argument("--epochs", type=int, default=20, help="Number of training epochs")
-    parser.add_argument("--save_dir", type=str, default="./trained_models", help="Where to save outputs")
-    args = parser.parse_args()
-
-    run(args.experiment, args.epochs, args.save_dir)
+    run("TEST", 100, "/its/home/drs25/ant_trajectory/data/RL_TRIAL/")
 
     
 

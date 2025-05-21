@@ -27,8 +27,8 @@ class environment:
         self.show=show
         self.record=record
         self.recording=0
-        self.reset()
         self.target=(0.15,-0.003) #food source
+        self.reset()
     def reset(self):
         self.agent_pos=[0.08,0.6]
         self.angle=0

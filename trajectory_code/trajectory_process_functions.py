@@ -427,12 +427,16 @@ def transform_model_trajects(traject_coords_path,
         color = cmap(i / (n - 1))
         x_vals_pixels = ((x_vals-omni_food_coord[0])*ppm)+img_food_coord[0]
         y_vals_pixels = ((y_vals-omni_food_coord[1])*ppm)+img_food_coord[1]
-        color = cmap(norm(i))
-        ax.plot(x_vals_pixels, y_vals_pixels,color=color)
+        if time_element:
+            color = cmap(norm(i))
+            ax.plot(x_vals_pixels, y_vals_pixels,color=color)
+        else:
+            ax.plot(x_vals_pixels, y_vals_pixels)
     sm = ScalarMappable(cmap=cmap, norm=norm)
     sm.set_array([])  # Required for colorbar, even if empty
-    cbar = plt.colorbar(sm, ax=ax)
-    cbar.set_label('Trajectory Timestep (n)')
+    if time_element:
+        cbar = plt.colorbar(sm, ax=ax)
+        cbar.set_label('Trajectory Timestep (n)')
     ax.set_xlabel("X position")
     ax.set_ylabel("Y position")
     ax.set_title("Trajectories Over Time (Darker = Higher n)")
