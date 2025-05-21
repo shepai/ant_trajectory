@@ -135,18 +135,40 @@ class environment:
     def getAntVision(self):
         observation=self.getObservation()#observation = cv2.resize(self.getObservation(), (8, 48), interpolation = cv2.INTER_AREA)
         return observation.reshape((1,*observation.shape))
+        
     def step(self,action):
-        #action should be the left right turn
+        # Action map: 0=right, 1=left, 2=forward
         options=[[0,0.5],[0.5,0],[0.1,0.1]]
         vel=options[action]
+
+        prev_pos = np.array(self.agent_pos)
+        prev_dist = np.linalg.norm(prev_pos - np.array(self.target))
+        
         done=self.moveAgent(*vel) #move agent
         observation = self.getAntVision()
         traj=np.array(self.trajectory)
         #@alej this is how I have put in reward but feel free to change it
         #reward=np.linalg.norm(traj[0]-traj[-1]) # @dex I seem to understand that there is a larger reward for covering more distance rather than getting closer to the food
+
+        #trying vector to goal 
+        vec_to_goal = np.array(self.target) - np.array(self.agent_pos)
+        unit_vec = vec_to_goal / (np.linalg.norm(vec_to_goal) + 1e-6)
+
+       curr_distance = np.linalg.norm(np.array(self.agent_pos) - np.array(self.target))
+        distance_reward = prev_dist - curr_distance
+    
+        # Directional reward
+        vec_to_goal = np.array(self.target) - np.array(self.agent_pos)
+        unit_vec = vec_to_goal / (np.linalg.norm(vec_to_goal) + 1e-6)
+        heading_vec = np.array([np.cos(self.angle), np.sin(self.angle)])
+        directional_reward = np.dot(unit_vec, heading_vec)
+    
+        # Combine rewards
+        reward = 10 * distance_reward + 2 * directional_reward
+
         
-        curr_distance = np.linalg.norm(np.array(self.agent_pos) - np.array(self.target)) #I hope this works... It should basically calculate a reward based on how closer to the target the agent gets
-        reward = self.prev_distance - curr_distance  # positive if getting closer
+        # curr_distance = np.linalg.norm(np.array(self.agent_pos) - np.array(self.target)) #I hope this works... It should basically calculate a reward based on how closer to the target the agent gets
+        # reward = self.prev_distance - curr_distance  # positive if getting closer
         self.prev_distance = curr_distance
         # Optional penalty for dying 
         if self.died():
