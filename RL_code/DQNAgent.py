@@ -83,3 +83,69 @@ class DQNAgent:
         #epsilon decays
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
+
+
+class ContinuousAgent:
+    def __init__(self, state_shape, device):
+        self.device = device
+        self.policy_net = AntAgentCNN(input_channels=state_shape[0], num_actions=2).to(device)  # 2 for [vx, vy]
+        self.target_net = AntAgentCNN(input_channels=state_shape[0], num_actions=2).to(device)
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.target_net.eval()
+
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=1e-4)
+        self.memory = deque(maxlen=10000)
+
+        self.batch_size = 64
+        self.gamma = 0.99
+        self.epsilon = 1.0
+        self.epsilon_decay = 0.995
+        self.epsilon_min = 0.1
+        self.update_target_every = 10
+        self.steps_done = 0
+
+    def step(self, state):
+        if random.random() < self.epsilon:
+            return np.random.uniform(-0.5, 0.5, size=2)
+        with torch.no_grad():
+            state = torch.tensor(state, dtype=torch.float32).unsqueeze(0).to(self.device)
+            action = self.policy_net(state)
+            return action.cpu().numpy().flatten()
+
+    def store_transition(self, state, action, reward, next_state, done):
+        self.memory.append((state, action, reward, next_state, done))
+
+    def train_step(self):
+        if len(self.memory) < self.batch_size:
+            return
+        batch = random.sample(self.memory, self.batch_size)
+        states, actions, rewards, next_states, dones = zip(*batch)
+
+        states = torch.tensor(np.array(states), dtype=torch.float32).to(self.device)
+        actions = torch.tensor(actions, dtype=torch.float32).to(self.device)
+        rewards = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1).to(self.device)
+        next_states = torch.tensor(np.array(next_states), dtype=torch.float32).to(self.device)
+        dones = torch.tensor(dones, dtype=torch.float32).unsqueeze(1).to(self.device)
+
+        # Predict current actions (this is like an actor outputting actions)
+        current_actions = self.policy_net(states)
+        # Predict next actions from target network (could be used in target estimation)
+        next_actions = self.target_net(next_states).detach()
+
+        # Calculate target Q values (mock version assuming reward + future prediction)
+        target_actions = rewards + self.gamma * (1 - dones) * next_actions.norm(dim=1, keepdim=True)
+
+        # Loss: how far the predicted actions are from target actions (mock)
+        predicted_action_values = current_actions.norm(dim=1, keepdim=True)
+        loss = F.mse_loss(predicted_action_values, target_actions)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        self.steps_done += 1
+        if self.steps_done % self.update_target_every == 0:
+            self.target_net.load_state_dict(self.policy_net.state_dict())
+
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
