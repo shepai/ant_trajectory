@@ -14,6 +14,7 @@ class GA:
         self.rate=mutation_rate
         #self.initialize_population(controller,[_INPUT_SIZE_,[_H1_,_H2_],_OUTPUTSIZE_])
         self.sex=sex
+        self.best_genos_time=[]
     def initialize_population(self,contr,params,std=0.2):
         self.contr=contr
         self.params=params
@@ -21,6 +22,27 @@ class GA:
         for i in range(self.pop_zise):
             population.append(contr(*params,std=std))   #@seyi this is where the network sizes go
         self.pop=population
+class Hillclimbers(GA):
+    def evolve(self,environment,fitness,outputs=False):
+        fitness_matrix=np.zeros((self.pop_zise))
+        history=[]
+        for i in range(self.pop_zise): #calculate current fitness of all genotypes
+            positions,target=environment.runTrial(self.pop[i])
+            fitness_matrix[i]=fitness(positions,target)
+        for gen in range(self.generations): #begin actual evolution
+            if outputs:
+                print("Generation",gen,"best fitness:",np.max(fitness_matrix))
+            for j in range(self.pop_zise):
+                geno=deepcopy(self.pop[j])
+                geno.mutate()
+                positions,target=environment.runTrial(geno)
+                f=fitness(positions,target)
+                if f>fitness_matrix[j]:
+                    self.pop[j]=deepcopy(geno)
+                    fitness_matrix[j]=f
+            self.best_genos_time.append(deepcopy(self.pop[np.argmax(fitness_matrix)]))
+            history.append(np.max(fitness_matrix))
+        return history,fitness_matrix
 class Microbial_GA(GA):
     def evolve(self,environment,fitness,outputs=False):
         history=[]
@@ -51,6 +73,7 @@ class Microbial_GA(GA):
                 fitness_matrix[ind2]=fitness(positions,target)
             
             history.append(np.max(fitness_matrix))
+            self.best_genos_time.append(deepcopy(self.pop[np.argmax(fitness_matrix)]))
         return history,fitness_matrix
     
 class NEAT(GA):
@@ -136,7 +159,9 @@ class NEAT(GA):
                         offspring.insert_layer(np.random.normal(0,offspring.std,(512,512)),np.random.normal(0,offspring.std,(512,)))
                     
                     new_population.append(offspring)
+            self.best_genos_time.append(deepcopy(self.pop[np.argmax(fitness_matrix)]))
             self.pop=deepcopy(new_population)
+            
         return np.array(history),fitness_matrix
 
 class Differential(GA):
@@ -165,6 +190,7 @@ class Differential(GA):
                 if trial_fitness>fitness_matrix[i]:
                     fitness_matrix[i]=trial_fitness
                     self.pop[i]=deepcopy(mutant)
+            self.best_genos_time.append(deepcopy(self.pop[np.argmax(fitness_matrix)]))
             history.append(np.max(fitness_matrix))
         return np.array(history), fitness_matrix
 if __name__ == "__main__": #test code to run in same file
