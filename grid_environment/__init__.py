@@ -11,7 +11,7 @@ except:
     print("error starting auto encoder")
 #matplotlib.use('TkAgg')
 class environment:
-    def __init__(self,data="/data/full_arena_grid_infer_views/",show=0,record=0,filename="output.avi"):
+    def __init__(self,data="/data/full_arena_grid_infer_views/",show=0,record=0,filename="output.avi",randomize_start=False):
         #form the correct datapaths
         self.filename=filename
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -28,9 +28,11 @@ class environment:
         self.record=record
         self.recording=0
         self.target=(0.15,-0.003) #food source
+        self.random=randomize_start
         self.reset()
     def reset(self):
         self.agent_pos=[0.08,0.6]
+        if self.random: self.agent_pos=[np.random.uniform(np.min(self.x), np.max(self.x)),np.random.uniform(np.min(self.y), np.max(self.y))]
         self.angle=0
         self.trajectory=[]
         self.prev_distance = np.linalg.norm(np.array(self.agent_pos) - np.array(self.target)) # this saves the initial distance from the agent to the target for comparison after each step
