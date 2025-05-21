@@ -383,7 +383,7 @@ def distance(p1, p2):
     return np.linalg.norm(np.array(p1) - np.array(p2))
     
 def transform_model_trajects(traject_coords_path, 
-                             image_path=r"\ant_trajectory\trajectory_code\testA_ant1_image.jpg", savefig="", x_scale=1,time_element=False):
+                             image_path=r"trajectory_code\top_down_is.png", savefig="",time_element=False):
     
     """Function to plot a series of trajectories from the simulation environment in metres,
     and plot them on top of an image of the real life environment in pixels.
@@ -398,17 +398,20 @@ def transform_model_trajects(traject_coords_path,
         traject_coords = np.load(traject_coords_path)
     else: traject_coords=traject_coords_path
     omni_food_coord = (0.15,-0.003,0.43)
-    img_food_coord  = (542, 652)
-    panel_ends = [(147, 569), (301, 1012)]
-    start_position = (0.08, 0.6)
-    #make "pixels per centimeter" ratio
-    ppm = distance(panel_ends[0], panel_ends[1])/0.4 # 0.4 metres is length of a panel in real life
+    omni_start_coord = (0.08, 0.6, 0.43)
+    metre_distance = distance(omni_start_coord[:2], omni_food_coord[:2])
+    
+    pixel_food_coord  = (583, 580)
+    pixel_start_coord = (527, 224)
+    pixel_distance = distance(pixel_start_coord, pixel_food_coord)
+    #make "pixels per metre" ratio
+    ppm = pixel_distance/metre_distance
     
     #load arena
     arena_img = plt.imread(image_path)
     fig, ax = plt.subplots()
     ax.imshow(arena_img)
-    ax.scatter(img_food_coord[0], img_food_coord[1], marker= "x")
+    ax.scatter(pixel_food_coord[0], pixel_food_coord[1], marker= "x")
     converted=[]
     n = len(traject_coords_path)
     cmap = plt.cm.gray_r
@@ -418,15 +421,11 @@ def transform_model_trajects(traject_coords_path,
         x_vals = traject[:, 0]
         y_vals = traject[:, 1]
 
-        # get the difference between start x value and each trajectory value. 
-        x_diff = x_vals - start_position[0]
-        #Then apply a scaling factor to this difference before adding back to the starting x value.
-        x_vals = start_position[0] + (x_diff*x_scale)
-        #making y value increase instead of decrease in respect to origin point
-        y_vals = (start_position[1] + (start_position[1] - y_vals))-1
         color = cmap(i / (n - 1))
-        x_vals_pixels = ((x_vals-omni_food_coord[0])*ppm)+img_food_coord[0]
-        y_vals_pixels = ((y_vals-omni_food_coord[1])*ppm)+img_food_coord[1]
+        # convert x and y values in metres from grid, to pixels in the image
+        x_vals_pixels = pixel_food_coord[0] + (x_vals-omni_food_coord[0])*ppm # order matters in python
+        y_vals_pixels = pixel_food_coord[1] - (y_vals-omni_food_coord[1])*ppm # axis offset for y
+        
         if time_element:
             color = cmap(norm(i))
             ax.plot(x_vals_pixels, y_vals_pixels,color=color)
