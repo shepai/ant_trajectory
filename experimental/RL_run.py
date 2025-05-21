@@ -11,6 +11,7 @@ import datetime
 import json
 import csv
 import matplotlib.pyplot as plt
+
 def save_array_to_folder(base_dir, folder_name, fitness, pathways):
     folder_path = os.path.join(base_dir, folder_name)
     # Create folder if it doesn't exist
@@ -42,14 +43,15 @@ def run(experiment_name, epochs, save_dir="./trained_models"):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     agent = ContinuousAgent(image.shape, device)
 
-    T = 1
+    T = 3 # <--- changed the episode duration 
     dt = 0.01
     env.dt = dt
     path_hist = []
     reward_hist = []
     epsilon_hist = []
+    dist_hist = [] #<--- tracking distance to reward
 
-    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     experiment_folder = os.path.join(save_dir, f"{experiment_name}_{timestamp}")
     os.makedirs(experiment_folder, exist_ok=True)
     csv_log_path = os.path.join(experiment_folder, "training_rewards.csv")
@@ -77,18 +79,21 @@ def run(experiment_name, epochs, save_dir="./trained_models"):
             env.reset()
             state = env.getAntVision()
             total_reward = 0
+            trial_dists = [] 
             for t in np.arange(0, T, dt):
                 action = agent.step(state)
-                next_state, reward, done, _ = env.step(action*10)
+                next_state, reward, done, _ = env.step(action*10) #scaling step
                 agent.store_transition(state, action, reward, next_state, done)
                 agent.train_step()
                 state = next_state
                 total_reward += reward
+                trial_dists.append(np.linalg.norm(np.array(env.agent_pos) - np.array(env.target))) # storing the distance from the target
                 if done:
                     break
             reward_hist.append(total_reward)
             epsilon_hist.append(agent.epsilon)
             path_hist.append(np.array(env.trajectory).copy())
+            dist_hist.append(trial_dists)
             writer.writerow([j + 1, total_reward, agent.epsilon])
             print(f"Trial {j}: Reward: {total_reward:.2f}, Epsilon: {agent.epsilon:.4f}")
             if j%50==0 and j!=0:
@@ -100,6 +105,9 @@ def run(experiment_name, epochs, save_dir="./trained_models"):
     model_path = os.path.join(experiment_folder, "model.pt")
     torch.save(agent.policy_net.state_dict(), model_path)
     print(f"Model saved to {model_path}")
+
+    # Save distance info
+    np.save(os.path.join(experiment_folder, "stepwise_distances.npy"), dist_hist)
 
     # Plot reward curve
     plt.figure(figsize=(10, 4))
