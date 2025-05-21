@@ -208,6 +208,9 @@ class CustomEnv(gym.Env):
         self.target=(0.15,-0.003) #food source
         self.random=randomize_start
         self.reset()
+        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
+        # Observation space: 48x8 grayscale image (1 channel), dtype uint8
+        self.observation_space = spaces.Box(low=0, high=255, shape=(1, 48, 8), dtype=np.uint8)
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         self.agent_pos=[0.08,0.6]
@@ -234,7 +237,7 @@ class CustomEnv(gym.Env):
             )
             if not self.out.isOpened():
                 raise RuntimeError("VideoWriter failed to open. Check codec, path, and frame size.")
-            
+        return self.getObservation(),{}
     def getObservation(self):
         image=self.find_nearest(*self.agent_pos)
         pixels_per_degree = image.shape[1] / 360.0
