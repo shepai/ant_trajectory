@@ -237,7 +237,7 @@ class CustomEnv(gym.Env):
             )
             if not self.out.isOpened():
                 raise RuntimeError("VideoWriter failed to open. Check codec, path, and frame size.")
-        return self.getObservation(),{}
+        return self.getObservation().reshape((1,48,8)),{}
     def getObservation(self):
         image=self.find_nearest(*self.agent_pos)
         pixels_per_degree = image.shape[1] / 360.0
