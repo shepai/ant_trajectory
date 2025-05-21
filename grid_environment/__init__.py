@@ -23,7 +23,7 @@ class environment:
         self.y=self.grid["y_m"]
         self.files={}
         for f in self.grid['img_name']:
-            self.files[f]=cv2.resize(cv2.cvtColor(cv2.imread(self.datapath+'/'+f).astype(np.uint8), cv2.COLOR_BGR2GRAY), (8, 48), interpolation = cv2.INTER_AREA)
+            self.files[f]=cv2.resize(cv2.cvtColor(cv2.imread(self.datapath+'/'+f).astype(np.uint8), cv2.COLOR_BGR2GRAY), (8, 48), interpolation = cv2.INTER_AREA).T
         self.show=show
         self.record=record
         self.recording=0
@@ -201,7 +201,7 @@ class CustomEnv(gym.Env):
         self.y=self.grid["y_m"]
         self.files={}
         for f in self.grid['img_name']:
-            self.files[f]=cv2.resize(cv2.cvtColor(cv2.imread(self.datapath+'/'+f).astype(np.uint8), cv2.COLOR_BGR2GRAY), (8, 48), interpolation = cv2.INTER_AREA)
+            self.files[f]=cv2.resize(cv2.cvtColor(cv2.imread(self.datapath+'/'+f).astype(np.uint8), cv2.COLOR_BGR2GRAY), (8, 48), interpolation = cv2.INTER_AREA).T
         self.show=show
         self.record=record
         self.recording=0
@@ -210,7 +210,7 @@ class CustomEnv(gym.Env):
         self.reset()
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
         # Observation space: 48x8 grayscale image (1 channel), dtype uint8
-        self.observation_space = spaces.Box(low=0, high=255, shape=(1, 48, 8), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(1 ,8, 48), dtype=np.uint8)
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         self.agent_pos=[0.08,0.6]
@@ -237,7 +237,7 @@ class CustomEnv(gym.Env):
             )
             if not self.out.isOpened():
                 raise RuntimeError("VideoWriter failed to open. Check codec, path, and frame size.")
-        return self.getObservation().reshape((1,48,8)),{}
+        return self.getObservation().reshape((1 ,8, 48)).astype(np.uint8),{}
     def getObservation(self):
         image=self.find_nearest(*self.agent_pos)
         pixels_per_degree = image.shape[1] / 360.0
@@ -297,38 +297,15 @@ class CustomEnv(gym.Env):
         traj=np.array(self.trajectory)
         plt.plot(traj[:,0],traj[:,1])
         plt.show()
-    def runTrial(self,agent,T=1,dt=0.01): #run a trial
-        t_=time.time()
-        self.reset()
-        self.trajectory.append(self.agent_pos.copy())
-        dist=[]
-        self.dt=dt
-        for t in np.arange(0,T,dt): #loop through timesteps
-            observation = self.getAntVision()
-            observation=observation.reshape((1,*observation.shape,1)) if "CNN" in str(agent.__class__) else encode(observation)
-            vel=agent.step(observation/255)  #get agent prediction #ODO update for CNN
-            if "LRF" in str(agent.__class__):
-                options=[[0,1.5],[1.5,0],[.1,.1]]
-                problem=self.moveAgent(*options[vel]) #move to target
-            else: 
-                problem=self.moveAgent(vel[0],vel[1]) #move to target
-            dist.append(np.linalg.norm(np.array(self.agent_pos)-np.array(self.target))) #distance to target collection
-            if problem: break
-        #print("\tRan trial in",(time.time()-t_),"seconds")
-        return np.array(self.trajectory), np.array(dist)
     def getAntVision(self):
         observation=self.getObservation()#observation = cv2.resize(self.getObservation(), (8, 48), interpolation = cv2.INTER_AREA)
-        return observation.reshape((1,*observation.shape))
+        return observation.reshape((1 ,8, 48)).astype(np.uint8)
         
     def step(self,action):
         # Action map: 0=right, 1=left, 2=forward
-        options=[[0,0.5],[0.5,0],[0.1,0.1]]
-        vel=options[action]
-
         prev_pos = np.array(self.agent_pos)
         prev_dist = np.linalg.norm(prev_pos - np.array(self.target))
-        
-        done=self.moveAgent(*vel) #move agent
+        done=self.moveAgent(*action) #move agent
         observation = self.getAntVision()
         traj=np.array(self.trajectory)
         #@alej this is how I have put in reward but feel free to change it
@@ -358,7 +335,7 @@ class CustomEnv(gym.Env):
         if self.died():
             reward -= 10  # strong negative penalty. Don't die lil ant
         info={}
-        return observation,reward,done,info
+        return observation.reshape((1 ,8, 48)).astype(np.uint8),reward,done,False,info
 
     def render(self):
         # Optional visualization
