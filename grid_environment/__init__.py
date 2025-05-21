@@ -177,6 +177,54 @@ class environment:
             reward -= 10  # strong negative penalty. Don't die lil ant
         info={}
         return observation,reward,done,info
+
+
+import gymnasium as gym
+import numpy as np
+from gymnasium import spaces
+
+class CustomEnv(gym.Env,environment):
+    """Custom Environment that follows gym interface."""
+    
+    metadata = {"render_modes": ["human"], "render_fps": 30}
+
+    def __init__(self,data="/data/full_arena_grid_infer_views/",show=0,record=0,filename="output.avi",randomize_start=False):
+        super().__init__()
+
+        # Continuous actions: wheel velocities (assume -1 to 1 range for each wheel)
+        self.num_wheels = num_wheels
+        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(self.num_wheels,), dtype=np.float32)
+
+        # Observation space: 48x8 grayscale image (1 channel), dtype uint8
+        self.observation_space = spaces.Box(low=0, high=255, shape=(1, 48, 8), dtype=np.uint8)
+
+    def step(self, action):
+        # Example dummy implementation
+        # Apply the action (set wheel velocities)
+        # Update the robot's state and get the new image observation
+
+        observation = np.random.randint(0, 256, (1, 48, 8), dtype=np.uint8)
+        reward = 0.0
+        terminated = False
+        truncated = False
+        info = {}
+
+        return observation, reward, terminated, truncated, info
+
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
+        # Reset the robot and return an initial observation
+        observation = np.random.randint(0, 256, (1, 48, 8), dtype=np.uint8)
+        info = {}
+        return observation, info
+
+    def render(self):
+        # Optional visualization
+        pass
+
+    def close(self):
+        # Cleanup if needed
+        pass
 if __name__=="__main__":
     env=environment(show=1,record=1)
     """import keyboard
