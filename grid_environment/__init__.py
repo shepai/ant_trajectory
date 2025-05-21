@@ -189,26 +189,47 @@ class CustomEnv(gym.Env,environment):
     metadata = {"render_modes": ["human"], "render_fps": 30}
 
     def __init__(self,data="/data/full_arena_grid_infer_views/",show=0,record=0,filename="output.avi",randomize_start=False):
-        super().__init__()
+        super().__init__(data="/data/full_arena_grid_infer_views/",show=0,record=0,filename="output.avi",randomize_start=False)
 
-        # Continuous actions: wheel velocities (assume -1 to 1 range for each wheel)
-        self.num_wheels = num_wheels
-        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(self.num_wheels,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
 
         # Observation space: 48x8 grayscale image (1 channel), dtype uint8
-        self.observation_space = spaces.Box(low=0, high=255, shape=(1, 48, 8), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(1, 8, 48), dtype=np.uint8)
 
     def step(self, action):
-        # Example dummy implementation
-        # Apply the action (set wheel velocities)
-        # Update the robot's state and get the new image observation
+        prev_pos = np.array(self.agent_pos)
+        prev_dist = np.linalg.norm(prev_pos - np.array(self.target))
+        
+        done=self.moveAgent(*action) #move agent
+        observation = self.getAntVision().reshape((1,8,48))
+        traj=np.array(self.trajectory)
+        #@alej this is how I have put in reward but feel free to change it
+        #reward=np.linalg.norm(traj[0]-traj[-1]) # @dex I seem to understand that there is a larger reward for covering more distance rather than getting closer to the food
 
-        observation = np.random.randint(0, 256, (1, 48, 8), dtype=np.uint8)
-        reward = 0.0
-        terminated = False
-        truncated = False
-        info = {}
+        #trying vector to goal 
+        vec_to_goal = np.array(self.target) - np.array(self.agent_pos)
+        unit_vec = vec_to_goal / (np.linalg.norm(vec_to_goal) + 1e-6)
 
+        curr_distance = np.linalg.norm(np.array(self.agent_pos) - np.array(self.target))
+        distance_reward = prev_dist - curr_distance
+    
+        # Directional reward
+        vec_to_goal = np.array(self.target) - np.array(self.agent_pos)
+        unit_vec = vec_to_goal / (np.linalg.norm(vec_to_goal) + 1e-6)
+        heading_vec = np.array([np.cos(self.angle), np.sin(self.angle)])
+        directional_reward = np.dot(unit_vec, heading_vec)
+    
+        # Combine rewards
+        reward = 10 * distance_reward + 2 * directional_reward
+
+        
+        # curr_distance = np.linalg.norm(np.array(self.agent_pos) - np.array(self.target)) #I hope this works... It should basically calculate a reward based on how closer to the target the agent gets
+        # reward = self.prev_distance - curr_distance  # positive if getting closer
+        self.prev_distance = curr_distance
+        # Optional penalty for dying 
+        if self.died():
+            reward -= 10  # strong negative penalty. Don't die lil ant
+        info={}
         return observation, reward, terminated, truncated, info
 
     def reset(self, seed=None, options=None):
@@ -226,7 +247,8 @@ class CustomEnv(gym.Env,environment):
         # Cleanup if needed
         pass
 if __name__=="__main__":
-    env=environment(show=1,record=1)
+    env=CustomEnv(show=1,record=0)
+    #env=environment(show=1,record=1)
     """import keyboard
     import time
     x, y = 0.0, 0.0
@@ -248,7 +270,7 @@ if __name__=="__main__":
         env.out.release()
         plt.close()
         env.visualise()"""
-    ar=[]
+    """ar=[]
     c=0
     for file in env.files:
         for theta in range(360):
@@ -262,7 +284,7 @@ if __name__=="__main__":
             c+=1
 
     ar=np.array(ar)
-    print(ar.shape)
+    print(ar.shape)"""
     #np.save("/its/home/drs25/ant_trajectory/autoencoder/allangles",ar)
 
         
