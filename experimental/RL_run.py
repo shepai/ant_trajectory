@@ -51,7 +51,7 @@ def run(experiment_name, epochs, save_dir="./trained_models"):
     epsilon_hist = []
     dist_hist = [] #<--- tracking distance to reward
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     experiment_folder = os.path.join(save_dir, f"{experiment_name}_{timestamp}")
     os.makedirs(experiment_folder, exist_ok=True)
     csv_log_path = os.path.join(experiment_folder, "training_rewards.csv")
